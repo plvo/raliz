@@ -26,6 +26,7 @@
     "better-auth": "^1.2.7",
     "cmdk": "^1.1.1",
     "date-fns": "^4.1.0",
+    "ethers": "^6.15.0",
     "framer-motion": "^12.10.4",
     "html2canvas": "^1.4.1",
     "html2canvas-pro": "^1.5.11",

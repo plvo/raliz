@@ -12,11 +12,22 @@ import { Web3AuthProvider } from '@web3auth/modal/react';
 import type { Web3AuthContextConfig } from '@web3auth/modal/react';
 import { WagmiProvider } from '@web3auth/modal/react/wagmi';
 import { ThemeProvider as NextThemesProvider } from 'next-themes';
+import { CHILIZ_SPICY_TESTNET } from '@/lib/web3-config';
 
 const web3AuthOptions: Web3AuthOptions = {
   // biome-ignore lint/style/noNonNullAssertion: <explanation>
   clientId: 'BDfGekwXLJUrFw-WIxiDBLuqaZ7J9nDFSgZEug-KMBaSYgY4nfX_xTJRSr7_kGEz-MDVBhaa_M_RAJIITVuPlV0',
   web3AuthNetwork: WEB3AUTH_NETWORK.SAPPHIRE_DEVNET,
+  chainConfig: {
+    chainNamespace: 'eip155',
+    chainId: `0x${CHILIZ_SPICY_TESTNET.id.toString(16)}`, // 88882 en hex
+    rpcTarget: CHILIZ_SPICY_TESTNET.rpcUrls.default.http[0],
+    displayName: CHILIZ_SPICY_TESTNET.name,
+    blockExplorerUrl: CHILIZ_SPICY_TESTNET.blockExplorers.default.url,
+    ticker: CHILIZ_SPICY_TESTNET.nativeCurrency.symbol,
+    tickerName: CHILIZ_SPICY_TESTNET.nativeCurrency.name,
+    decimals: CHILIZ_SPICY_TESTNET.nativeCurrency.decimals,
+  },
   modalConfig: {
     connectors: {
       // Connecteur AUTH pour les logins sociaux - ACTIVÉ pour email seulement

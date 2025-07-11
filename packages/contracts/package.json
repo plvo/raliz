@@ -4,8 +4,12 @@
   "scripts": {
     "build": "hardhat compile",
     "test": "hardhat test",
+    "test:workflow": "hardhat run scripts/test-full-workflow.ts --network localhost",
     "deploy:testnet": "hardhat run scripts/deploy.ts --network chiliz-testnet",
-    "deploy:local": "hardhat run scripts/deploy.ts --network localhost"
+    "deploy:local": "hardhat run scripts/deploy.ts --network localhost",
+    "deploy:tokens": "hardhat run scripts/deploy-tokens.ts --network chiliz-testnet",
+    "deploy:tokens:local": "hardhat run scripts/deploy-tokens.ts --network localhost",
+    "deploy:spicy": "hardhat run scripts/deploy-spicy.ts --network chiliz-testnet"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-ethers": "^3.0.9",
