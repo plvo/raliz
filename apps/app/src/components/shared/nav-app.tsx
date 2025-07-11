@@ -15,6 +15,7 @@ export default function NavApp() {
       <div className='flex items-center gap-4'>
         <Link href='/'>Home</Link>
         <Link href='/about'>About</Link>
+        <Link href='/dashboard'>Dashboard</Link>
       </div>
 
       <div className='flex items-center gap-4'>

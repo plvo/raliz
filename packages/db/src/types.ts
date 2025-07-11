@@ -4,20 +4,12 @@ import type {
   organizerTable,
   participationTable,
   raffleTable,
-  userAccountTable,
-  userSessionTable,
   userTable,
   winnerTable,
 } from './schema';
 
 export type User = InferSelectModel<typeof userTable>;
 export type UserInsert = InferInsertModel<typeof userTable>;
-
-export type UserAccount = InferSelectModel<typeof userAccountTable>;
-export type UserAccountInsert = InferInsertModel<typeof userAccountTable>;
-
-export type UserSession = InferSelectModel<typeof userSessionTable>;
-export type UserSessionInsert = InferInsertModel<typeof userSessionTable>;
 
 export type Organizer = InferSelectModel<typeof organizerTable>;
 export type OrganizerInsert = InferInsertModel<typeof organizerTable>;

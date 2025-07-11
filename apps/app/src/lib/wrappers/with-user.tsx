@@ -1,7 +1,10 @@
-import { getOrCreateUserFromWeb3Auth } from '@/actions/user/create';
+'use client';
+
+import { getWeb3User } from '@/actions/web3auth';
+import { useActionQuery } from '@/hooks/use-action';
 import type { User } from '@repo/db';
-import { redirect } from 'next/navigation';
 import type * as React from 'react';
+import { useAccount } from 'wagmi';
 
 export interface NextPageProps {
   params?: Promise<{ [key: string]: string | string[] | undefined }>;
@@ -9,19 +12,31 @@ export interface NextPageProps {
 }
 
 export interface WithUserProps extends NextPageProps {
-  user: User;
+  user: User | null;
+  walletAddress: `0x${string}` | undefined;
 }
 
 export function withUser<P extends NextPageProps>(Page: React.ComponentType<P & WithUserProps>) {
   return async function WithUserWrapper(props: P) {
-    const userResult = await getOrCreateUserFromWeb3Auth();
+    const { address } = useAccount();
 
-    console.log('userResult', userResult);
+    const {
+      data: user,
+      isLoading,
+      error,
+    } = useActionQuery({
+      actionFn: () => getWeb3User(address || ''),
+      queryKey: ['user', address || ''],
+    });
 
-    if (!userResult.ok || !userResult.data) {
-      redirect('/auth/login');
+    if (isLoading) {
+      return <div>Loading...</div>;
     }
 
-    return <Page {...(props as P)} user={userResult.data} />;
+    if (error) {
+      return <div>Error: {error.toString()}</div>;
+    }
+
+    return <Page {...(props as P)} user={user} walletAddress={address} />;
   };
 }
