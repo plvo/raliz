@@ -1,0 +1,22 @@
+@import "@repo/ui/base.css";
+
+main {
+  @apply min-h-screen; /* minimum height screen */
+  @apply flex flex-col items-center; /* flexbox center */
+  @apply px-4; /* padding responsive horizontal */
+}
+
+section {
+  @apply w-full lg:max-w-7xl;
+  @apply mx-auto; /* margin auto */
+  @apply space-y-8; /* space between elements */
+}
+
+h1 {
+  @apply font-bold; /* bold text */
+  @apply text-4xl max-sm:text-2xl max-md:text-3xl; /* responsive text size */
+}
+
+.link-string {
+  @apply underline-offset-4 hover:underline;
+}

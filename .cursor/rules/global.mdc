@@ -1,0 +1,407 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# 🎟️ Raliz - Cursor Development Rules
+
+## 🏗️ Architecture Overview
+This is a **monorepo** with Turborepo containing:
+- `apps/app/` - User-facing Next.js app
+- `apps/backoffice/` - Admin/organizer backoffice Next.js app  
+- `packages/` - Shared packages (ui, db, auth, config)
+
+## 📁 Strict Directory Structure
+
+### Apps Structure (`apps/app/` & `apps/backoffice/`)
+```
+src/
+├── actions/           # Server actions organized by domain/CRUD
+│   ├── {domain}/
+│   │   ├── get.ts     # GET operations
+│   │   ├── create.ts  # CREATE operations
+│   │   ├── update.ts  # UPDATE operations
+│   │   ├── delete.ts  # DELETE operations
+│   │   └── helpers.ts # Domain-specific helpers
+├── app/              # Next.js App Router pages
+├── components/       # React components
+│   ├── {domain}/     # Domain-specific components
+│   └── shared/       # Shared components across app
+├── hooks/            # Custom React hooks
+├── lib/              # App-specific configurations & utilities
+│   ├── wrappers/     # Function wrappers (withAction, etc.)
+│   └── *.ts          # Other utilities
+├── schemas/          # Zod validation schemas
+├── services/         # External service integrations
+├── styles/           # CSS/styling files
+└── types/            # TypeScript type definitions
+```
+
+### Packages Structure (`packages/`)
+```
+packages/
+├── ui/               # Shared Shadcn components
+├── db/               # Drizzle schema & utilities
+├── auth/             # Authentication configuration
+├── contracts/        # Smart contracts (Solidity + Hardhat)
+└── config/           # Shared configs (ESLint, TS, etc.)
+```
+
+## 🔧 Development Patterns
+
+### 1. Server Actions (MANDATORY)
+- **ALL** database interactions MUST use server actions
+- Actions MUST be wrapped with `withAction` from `@/lib/wrappers/with-action.ts`
+- Actions should directly `return data` or `throw Error` - wrapper handles response format
+- Organize by domain + CRUD operation
+
+```typescript
+// ✅ CORRECT: actions/raffle/get.ts
+'use server';
+import { withAction } from '@/lib/wrappers/with-action';
+
+export async function getRaffles() {
+  return withAction<RaffleType[]>(async (prisma) => {
+    const raffles = await prisma.raffle.findMany({
+        where: { status: 'ACTIVE' }
+    });
+    return raffles; // Direct return - wrapper handles ApiResponse
+  }, false); // For non authentificated requests
+}
+
+export async function getRaffleById(id) {
+  return withAction<RaffleType>(async (prisma) => {
+    const raffle = await prisma.raffle.findUnique({
+        where: { id }
+    });
+    if (!raffle) throw new Error('Raffle not found');
+    return raffle;
+  }, true); // For authentificated requests
+}
+```
+### 2. Page Components (MANDATORY PATTERN)
+- Pages MUST follow this exact structure
+- NO "use client" in page files
+- Use server-side data loading with QueryBoundary
+- Always export metadata when relevant
+
+```typescript
+// ✅ CORRECT: app/raffles/page.tsx
+import { getRaffles } from '@/actions/raffle/get';
+import { QueryBoundary } from '@/components/shared/query-boundary';
+import RafflesList from '@/components/raffle/raffles-list';
+import type { Metadata } from 'next';
+
+export const generateMetadata = (): Metadata => ({
+  title: 'Raffles - Raliz',
+  description: 'Browse available raffles'
+});
+
+export default function RafflesPage() {
+  return (
+    <section className="container mx-auto py-8">
+      <QueryBoundary>
+        <Content />
+      </QueryBoundary>
+    </section>
+  );
+}
+
+async function Content() {
+  const raffles = await getRaffles();
+  
+  if (!raffles.ok) {
+    throw new Error('Failed to load raffles');
+  }
+
+  return <RafflesList raffles={raffles.data} />;
+}
+```
+
+### 3. Client Components & Hooks
+- Use `useActionQuery` and `useActionMutation` from `@/hooks/use-action.ts`
+- Client components for interactivity only
+- Keep business logic in server actions
+
+```typescript
+// ✅ CORRECT: components/raffle/participate-button.tsx
+'use client';
+import { useActionMutation } from '@/hooks/use-action';
+import { participateInRaffle } from '@/actions/participation/create';
+import { Button } from '@repo/ui/components/button';
+
+export function ParticipateButton({ raffleId }: { raffleId: string }) {
+  const { mutate, isPending } = useActionMutation({
+    actionFn: (data) => participateInRaffle(data),
+    successEvent: {
+      toast: { 
+        title: 'Success!',
+        description: 'You have successfully joined the raffle'
+      }
+    },
+    errorEvent: {
+      toast: {
+        title: 'Error',
+        description: 'Failed to join raffle'
+      }
+    },
+    invalidateQueries: [['raffles'], ['my-participations']]
+  });
+
+  return (
+    <Button 
+      onClick={() => mutate({ raffleId })}
+      disabled={isPending}
+    >
+      {isPending ? 'Joining...' : 'Join Raffle'}
+    </Button>
+  );
+}
+```
+
+### 4. Schemas & Validation
+- ALL forms MUST use Zod schemas from `@/schemas/`
+- Export schemas with clear naming
+
+```typescript
+// ✅ CORRECT: schemas/raffle.ts
+import { z } from 'zod';
+
+export const createRaffleSchema = z.object({
+  title: z.string().min(3).max(100),
+  description: z.string().min(10).max(500),
+  prizeDescription: z.string().min(5).max(200),
+  participationPrice: z.number().min(0),
+  tokenSymbol: z.string(),
+  maxWinners: z.number().min(1).max(100),
+  endDate: z.date().min(new Date())
+});
+
+export type CreateRaffleInput = z.infer<typeof createRaffleSchema>;
+```
+
+### 5. Services
+- External integrations in `@/services/`
+- Clear naming: `{service_name}.service.ts`
+
+```typescript
+// ✅ CORRECT: services/blockchain.service.ts
+export class BlockchainService {
+  static async deployRaffle(data: CreateRaffleInput) {
+    // Blockchain interaction logic
+  }
+  
+  static async participateInRaffle(raffleId: string, userAddress: string) {
+    // Smart contract interaction
+  }
+}
+```
+
+### 6. Smart Contracts (packages/contracts/)
+- ALL smart contracts MUST use Hardhat + TypeScript
+- MANDATORY security patterns: ReentrancyGuard, Ownable, Pausable
+- Every contract MUST have comprehensive tests
+- Use OpenZeppelin contracts for security primitives
+
+```solidity
+// ✅ CORRECT: contracts/Raliz.sol
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
+
+contract Raliz is ReentrancyGuard, Ownable, Pausable {
+    
+    // ALWAYS use events for transparency
+    event RaffleCreated(uint256 indexed raffleId, address indexed organizer);
+    event ParticipationRegistered(uint256 indexed raffleId, address indexed participant);
+    
+    // ALWAYS validate inputs
+    function createRaffle(...) external onlyAuthorizedOrganizer whenNotPaused {
+        require(bytes(_title).length > 0, "Title cannot be empty");
+        require(_endDate > block.timestamp, "End date must be in the future");
+        // ...
+    }
+    
+    // ALWAYS use nonReentrant for state-changing functions
+    function participate(uint256 _raffleId) external nonReentrant whenNotPaused {
+        // Implementation
+    }
+}
+```
+
+### Smart Contract Organization
+```
+packages/contracts/
+├── contracts/
+│   ├── Raliz.sol              # Main raffle contract
+│   └── MockFanToken.sol       # Test tokens (PSG, BAR, CITY)
+├── scripts/
+│   ├── deploy.ts              # Deployment scripts
+│   └── deploy-tokens.ts       # Token deployment
+├── test/
+│   └── Raliz.test.ts          # Comprehensive tests
+├── hardhat.config.ts          # Chiliz network config
+└── README.md                  # Contract documentation
+```
+
+### Blockchain Integration Rules
+- Server actions MUST handle blockchain interactions via services
+- NEVER expose private keys in frontend
+- Use environment variables for contract addresses
+- Always validate transaction success before database updates
+
+```typescript
+// ✅ CORRECT: services/blockchain.service.ts
+export class BlockchainService {
+  private static getContract() {
+    const provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
+    const signer = new ethers.Wallet(process.env.PRIVATE_KEY!, provider);
+    return new ethers.Contract(CONTRACT_ADDRESS, ABI, signer);
+  }
+  
+  static async participateInRaffle(raffleId: string, userAddress: string) {
+    const contract = this.getContract();
+    const tx = await contract.participate(raffleId);
+    const receipt = await tx.wait();
+    
+    if (!receipt.status) {
+      throw new Error('Transaction failed');
+    }
+    
+    return receipt.transactionHash;
+  }
+}
+
+// ✅ CORRECT: actions/participation/create.ts
+export async function participateInRaffle(data: ParticipateInput) {
+  return withAction<{ transactionHash: string }>(async (db) => {
+    // 1. Blockchain transaction first
+    const txHash = await BlockchainService.participateInRaffle(
+      data.raffleId, 
+      data.userAddress
+    );
+    
+    // 2. Database update only after blockchain success
+    await db.participation.create({
+      data: {
+        raffleId: data.raffleId,
+        userId: data.userId,
+        transactionHash: txHash,
+        // ...
+      }
+    });
+    
+    return { transactionHash: txHash };
+  }, true);
+}
+```
+
+## 🚫 Strict Rules - DO NOT
+
+1. **NO** direct Prisma calls outside server actions
+2. **NO** "use client" in page components
+3. **NO** business logic in client components
+4. **NO** inline styles - use Tailwind classes
+5. **NO** hardcoded strings - use constants
+6. **NO** any type - use proper TypeScript types
+7. **NO** mixing domain logic across actions
+
+### 🔗 Smart Contract Rules - DO NOT
+8. **NO** smart contracts without ReentrancyGuard on state-changing functions
+9. **NO** hardcoded contract addresses in code - use environment variables
+10. **NO** private keys in frontend code or version control
+11. **NO** database updates before blockchain transaction confirmation
+12. **NO** smart contract functions without proper input validation
+13. **NO** contracts without comprehensive test coverage
+14. **NO** deployment without proper gas estimation
+
+## ✅ Required Imports
+
+### Shared UI Components
+```typescript
+import { Button } from '@repo/ui/components/button';
+import { Card } from '@repo/ui/components/card';
+import { Input } from '@repo/ui/components/input';
+// etc.
+```
+
+### Database
+```typescript
+import { prisma } from '@repo/db';
+import type { Raffle, User, Participation } from '@repo/db';
+```
+
+### Authentication
+```typescript
+import { auth } from '@repo/auth';
+```
+
+### Smart Contracts & Blockchain
+```typescript
+import { ethers } from 'ethers';
+import type { Raliz, MockFanToken } from '@repo/contracts/typechain-types';
+```
+
+## 🎯 Domain-Specific Rules (Raliz)
+
+### Raffle Actions Structure
+```
+actions/
+├── raffle/
+│   ├── get.ts         # getRaffles, getRaffleById
+│   ├── create.ts      # createRaffle
+│   ├── update.ts      # updateRaffle
+│   └── draw.ts        # drawWinners (specific helper)
+├── participation/
+│   ├── get.ts         # getParticipations, getUserParticipations  
+│   ├── create.ts      # participateInRaffle
+├── user/
+│   ├── get.ts         # getProfile, getUsers
+│   ├── update.ts      # updateProfile
+└── notification/
+    ├── get.ts         # getNotifications
+    ├── create.ts      # createNotification
+    └── update.ts      # markAsRead
+```
+
+### Component Organization
+```
+components/
+├── raffle/
+│   ├── raffle-card.tsx
+│   ├── raffle-list.tsx
+│   ├── participate-button.tsx
+│   └── raffle-form.tsx
+├── participation/
+│   ├── participation-history.tsx
+│   └── winner-badge.tsx
+├── auth/
+│   ├── login-form.tsx
+│   └── wallet-connect.tsx
+└── shared/
+    ├── query-boundary.tsx
+    ├── loading-spinner.tsx
+    └── error-fallback.tsx
+```
+
+## 🔄 State Management Rules
+
+- Server state: React Query via `useActionQuery`/`useActionMutation`
+- Client state: React useState/useReducer for local state
+- Form state: React Hook Form + Zod schemas
+- Global state: React Context if absolutely necessary
+
+## 📱 Responsive & Accessibility
+
+- ALL components MUST be responsive (mobile-first)
+- Use Tailwind responsive prefixes: `sm:`, `md:`, `lg:`
+- MUST include proper ARIA attributes
+- Semantic HTML elements required
+
+
+This ruleset ensures consistency, maintainability, and scalability across the entire Raliz codebase. 
+
+For more context, you can find element in `/docs` folder.

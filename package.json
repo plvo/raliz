@@ -1,0 +1,42 @@
+{
+  "name": "raliz",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/plvo/raliz"
+  },
+  "author": ["https://github.com/plvo", "https://github.com/neysixx"],
+  "packageManager": "bun@1.2.18",
+  "workspaces": ["apps/*", "packages/*"],
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "clean": "rimraf .turbo node_modules .next bun.lock package-lock.json pnpm-lock.yaml",
+    "clean:all": "rimraf  \"**/.turbo\" \"**/node_modules\" \"**/.next\" \"**/bun.lock\" \"**/package-lock.json\" \"**/pnpm-lock.yaml\" && bun run clean",
+    "check": "biome check --write --verbose .",
+    "format": "biome format --write --verbose .",
+    "lint": "biome lint --write --verbose .",
+    "prebuild": "turbo run db:generate && next telemetry disable",
+    "build": "turbo run build",
+    "build:analyze": "ANALYZE=true next build",
+    "dev": "turbo run dev",
+    "start": "turbo run start",
+    "db:generate": "turbo run db:generate",
+    "db:migrate": "turbo run db:migrate",
+    "db:deploy": "turbo run db:deploy",
+    "db:seed": "turbo run db:seed",
+    "db:push": "turbo run db:push",
+    "db:dev-setup": "turbo run db:generate && turbo run db:migrate && turbo run db:seed",
+    "db:studio": "turbo run db:studio"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@react-native-async-storage/async-storage": "^2.2.0",
+    "@repo/config": "*",
+    "pino-pretty": "^13.0.0",
+    "rimraf": "^6.0.1",
+    "turbo": "^2.5.3",
+    "typescript": "5.8.3"
+  }
+}

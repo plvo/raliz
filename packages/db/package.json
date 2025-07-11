@@ -1,0 +1,29 @@
+{
+  "name": "@repo/db",
+  "version": "0.0.1",
+  "private": true,
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "files": ["dist/**"],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "db:check": "drizzle-kit check",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio"
+  },
+  "devDependencies": {
+    "@repo/config": "*",
+    "@types/pg": "^8.15.4",
+    "drizzle-kit": "^0.31.4",
+    "tsup": "^8.5.0"
+  },
+  "dependencies": {
+    "dotenv": "^17.0.1",
+    "drizzle-orm": "^0.44.2",
+    "pg": "^8.16.3"
+  }
+}
