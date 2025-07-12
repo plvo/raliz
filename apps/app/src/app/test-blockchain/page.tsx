@@ -1,5 +1,5 @@
-import { RaffleTest } from '@/components/blockchain/RaffleTest';
-import { FanTokenTest } from '@/components/blockchain/FanTokenTest';
+import { RaffleTest } from '@/components/blockchain/raffle-test';
+import { FanTokenTest } from '@/components/blockchain/fan-token-test';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
