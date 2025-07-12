@@ -7,7 +7,7 @@ import { WalletButton } from './wallet-button';
 
 const navLinks = [
   { href: '/', label: 'Home' },
-  { href: '/ranking', label: 'Ranking' },
+  { href: '/leaderboard', label: 'Leaderboard' },
   { href: '/profile', label: 'Profile' },
 ];
 
@@ -39,7 +39,7 @@ function NavLink({ pathname, href, label }: { pathname: string; href: string; la
       href={href}
       className={cn(
         'text-foreground hover:text-primary transition-colors px-2 py-1 rounded-md',
-        pathname === href && 'bg-muted text-primary font-medium',
+        pathname === href && 'bg-foreground/10 text-primary font-medium',
       )}
     >
       {label}

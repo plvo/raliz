@@ -17,11 +17,21 @@ export async function getOrgs() {
 
 export async function getOrgByFanTokenAddress(fanTokenAddress: string) {
   return withAction<OrgWithoutWallet | null>(async (db) => {
+    console.log({
+      fanTokenAddress,
+    });
+
+    console.log(await getOrgs());
+
     const org = await db.query.organizerTable.findFirst({
       where: eq(organizerTable.fanTokenAddress, fanTokenAddress),
       columns: {
         walletAddress: false,
       },
+    });
+
+    console.log({
+      org,
     });
 
     return org ?? null;

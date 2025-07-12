@@ -15,28 +15,28 @@ async function main() {
       name: 'Paris Saint-Germain Fan Token',
       symbol: 'PSG',
       decimals: 1,
-      supply: 1000000, // 1M tokens
+      supply: 1_000_000,
       description: 'Required to participate in PSG raffles',
     },
     {
       name: 'FC Barcelona Fan Token',
       symbol: 'BAR',
       decimals: 1,
-      supply: 1000000,
+      supply: 1_000_000,
       description: 'Required to participate in Barcelona raffles',
     },
     {
       name: 'Manchester City Fan Token',
       symbol: 'CITY',
       decimals: 1,
-      supply: 1000000,
+      supply: 1_000_000,
       description: 'Required to participate in Manchester City raffles',
     },
     {
       name: 'Galatasaray Fan Token',
       symbol: 'GAL',
       decimals: 1,
-      supply: 1000000,
+      supply: 1_000_000,
       description: 'Required to participate in Galatasaray raffles',
     },
   ];

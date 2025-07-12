@@ -18,7 +18,6 @@ interface RankingPageClientProps {
 export function RankingPageClient({ initialOverallRanking, seasons }: RankingPageClientProps) {
   const [selectedSeasonId, setSelectedSeasonId] = useState<string | null>(null);
 
-  // Fetch season-specific data when a season is selected
   const {
     data: seasonData,
     isLoading: isSeasonLoading,
@@ -28,7 +27,7 @@ export function RankingPageClient({ initialOverallRanking, seasons }: RankingPag
     actionFn: () => (selectedSeasonId ? getSeasonRanking(selectedSeasonId) : Promise.resolve({ ok: true, data: null })),
     queryOptions: {
       enabled: !!selectedSeasonId,
-      staleTime: 5 * 60 * 1000, // 5 minutes
+      staleTime: 60 * 1000, // 1 minute
     },
   });
 
