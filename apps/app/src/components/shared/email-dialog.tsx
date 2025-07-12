@@ -3,17 +3,28 @@
 import { addEmail } from '@/actions/auth/email';
 import { useActionMutation } from '@/hooks/use-action';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@repo/ui/components/dialog';
+import { Button } from '@repo/ui/components/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@repo/ui/components/dialog';
 import { Form } from '@repo/ui/components/form';
 import { InputField } from '@repo/ui/components/shuip/input-field';
 import { SubmitButton } from '@repo/ui/components/shuip/submit-button';
+import { cn } from '@repo/ui/lib/utils';
+import { useRouter } from 'next/navigation';
+import React from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 interface EmailDialogProps {
-  open: boolean;
-  setOpen: (open: boolean) => void;
   walletAddress: `0x${string}` | undefined;
+  open?: boolean;
+  setOpen?: (open: boolean) => void;
 }
 
 const addEmailSchema = z.object({
@@ -21,6 +32,9 @@ const addEmailSchema = z.object({
 });
 
 export function AddEmailDialog({ open, setOpen, walletAddress }: EmailDialogProps) {
+  const [defaultOpen, setDefaultOpen] = React.useState(false);
+  const router = useRouter();
+
   const form = useForm<z.infer<typeof addEmailSchema>>({
     resolver: zodResolver(addEmailSchema),
     defaultValues: {
@@ -39,7 +53,10 @@ export function AddEmailDialog({ open, setOpen, walletAddress }: EmailDialogProp
         title: 'Success',
         description: 'Email added successfully',
       },
-      fn: () => setOpen(false),
+      fn: () => {
+        setOpen ? setOpen(false) : setDefaultOpen(false);
+        router.refresh();
+      },
     },
     errorEvent: {
       toast: {
@@ -47,6 +64,7 @@ export function AddEmailDialog({ open, setOpen, walletAddress }: EmailDialogProp
         description: 'Failed to add email',
       },
     },
+    invalidateQueries: [['user', walletAddress || '']],
   });
 
   const onSubmit = (data: z.infer<typeof addEmailSchema>) => {
@@ -54,7 +72,12 @@ export function AddEmailDialog({ open, setOpen, walletAddress }: EmailDialogProp
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open ?? defaultOpen} onOpenChange={setOpen ?? setDefaultOpen}>
+      <DialogTrigger asChild>
+        <Button variant={'outline'} className={cn(setOpen && 'hidden')}>
+          Add Email
+        </Button>
+      </DialogTrigger>
       <DialogContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-4'>

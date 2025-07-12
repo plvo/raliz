@@ -19,7 +19,7 @@ function DashboardClient() {
   return (
     <section className='container mx-auto py-8'>
       <div className='mb-8'>
-        <h1 className='text-3xl font-bold mb-2'>Welcome back, {user.firstName}!</h1>
+        <h1 className='text-3xl font-bold mb-2'>Welcome back, {user.firstName ?? user.username}!</h1>
         <p className='text-muted-foreground'>Manage your participation in raffles and view your profile</p>
       </div>
 

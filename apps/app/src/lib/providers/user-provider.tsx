@@ -1,18 +1,29 @@
 'use client';
 
 import { getWeb3User } from '@/actions/auth/web3auth';
+import { AddEmailDialog } from '@/components/shared/email-dialog';
 import { useActionQuery } from '@/hooks/use-action';
 import type { User } from '@repo/db';
 import { Alert, AlertDescription, AlertTitle } from '@repo/ui/components/alert';
+import { useWeb3AuthConnect } from '@web3auth/modal/react';
 import type * as React from 'react';
 import { createContext, useContext } from 'react';
-import { useAccount } from 'wagmi';
+import { useAccount, useBalance } from 'wagmi';
 
 interface UserContextType {
   user: User | null;
   walletAddress: `0x${string}` | undefined;
-  isLoading: boolean;
-  error: unknown;
+  chainId: number | undefined;
+  balance:
+    | {
+        decimals: number;
+        formatted: string;
+        symbol: string;
+        value: bigint;
+      }
+    | undefined;
+  isConnected: boolean;
+  refetchUser: () => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -22,12 +33,15 @@ interface UserProviderProps {
 }
 
 export function UserProvider({ children }: UserProviderProps) {
-  const { address } = useAccount();
+  const { address, chainId } = useAccount();
+  const { data: balance, isLoading: isLoadingBalance, error: errorBalance } = useBalance({ address });
+  const { isConnected } = useWeb3AuthConnect();
 
   const {
     data: user,
     isLoading,
     error,
+    refetch: refetchUser,
   } = useActionQuery({
     actionFn: () => getWeb3User(address || ''),
     queryKey: ['user', address || ''],
@@ -35,12 +49,14 @@ export function UserProvider({ children }: UserProviderProps) {
 
   const contextValue: UserContextType = {
     user: user || null,
+    balance,
     walletAddress: address,
-    isLoading,
-    error,
+    chainId,
+    isConnected,
+    refetchUser,
   };
 
-  if (isLoading) {
+  if (isLoading || isLoadingBalance) {
     return (
       <div className='flex items-center justify-center min-h-screen'>
         <div className='text-center'>
@@ -51,12 +67,12 @@ export function UserProvider({ children }: UserProviderProps) {
     );
   }
 
-  if (error) {
+  if (error || errorBalance) {
     return (
       <div className='flex items-center justify-center min-h-screen'>
         <Alert variant='destructive' className='max-w-md'>
           <AlertTitle>Error loading user data</AlertTitle>
-          <AlertDescription>{error.toString()}</AlertDescription>
+          <AlertDescription>{error?.toString() || errorBalance?.toString()}</AlertDescription>
         </Alert>
       </div>
     );
@@ -65,15 +81,31 @@ export function UserProvider({ children }: UserProviderProps) {
   return (
     <UserContext.Provider value={contextValue}>
       {user && !user.email ? (
-        <div className='space-y-4'>
-          <Alert>
+        <div className='space-y-8'>
+          <Alert className='max-w-lg mx-auto mt-20' variant={'default'}>
             <AlertTitle>Email not added</AlertTitle>
-            <AlertDescription>Please add your email to continue.</AlertDescription>
+            <AlertDescription>
+              <span>Please add your email to do some magic 🪄</span>
+              <AddEmailDialog walletAddress={address} />
+            </AlertDescription>
           </Alert>
+          {/* <pre className='mt-24'>
+            {JSON.stringify(
+              {
+                contextValue: {
+                  ...contextValue,
+                  balance: contextValue.balance?.value.toString(),
+                  chainId,
+                },
+              },
+              null,
+              2,
+            )}
+          </pre> */}
           {children}
         </div>
       ) : (
-        children
+        <main className='mt-20'>{children}</main>
       )}
     </UserContext.Provider>
   );

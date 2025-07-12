@@ -2,8 +2,10 @@
 
 import {
   type UseMutationResult,
+  type UseQueryResult,
   type UseSuspenseQueryResult,
   useMutation,
+  useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
 import { type UseQueryOptions, useSuspenseQuery } from '@tanstack/react-query';
@@ -41,8 +43,8 @@ export function useActionQuery<TData = unknown, TError = unknown>({
   initialData,
   actionFn,
   queryOptions = {},
-}: UseApiQueryOptions<TData, TError>): UseSuspenseQueryResult<TData, TError> {
-  return useSuspenseQuery<ActionResponse<TData>, TError, TData, QueryKeyT>({
+}: UseApiQueryOptions<TData, TError>): UseQueryResult<TData, TError> {
+  return useQuery<ActionResponse<TData>, TError, TData, QueryKeyT>({
     queryKey,
     initialData: initialData ? ({ ok: true, data: initialData } as ActionResponse<TData>) : undefined,
     queryFn: actionFn,
@@ -53,6 +55,7 @@ export function useActionQuery<TData = unknown, TError = unknown>({
       return response.data;
     },
     retry: 1,
+    enabled: !!queryKey.filter((k) => k !== '').length, // Only enabled if queryKey has valid values
     ...queryOptions,
   });
 }

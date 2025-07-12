@@ -40,7 +40,8 @@ export default async function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning>
         <Providers web3authInitialState={web3authInitialState}>
           <NavApp />
-          <main>{children}</main>
+          {children}
+
           <Toaster richColors position='bottom-right' />
         </Providers>
       </body>

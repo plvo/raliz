@@ -106,7 +106,6 @@ main {
   @apply min-h-screen; /* minimum height screen */
   @apply flex flex-col items-center; /* flexbox center */
   @apply px-4; /* padding responsive horizontal */
-  @apply pt-20; /* padding top */
 }
 
 section {
