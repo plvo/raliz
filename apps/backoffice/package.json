@@ -20,6 +20,8 @@
     "@repo/ui": "*",
     "@tanstack/react-query": "^5.74.4",
     "@tanstack/react-table": "^8.21.3",
+    "@web3auth/metamask-adapter": "^8.12.4",
+    "@web3auth/modal": "^10.0.5",
     "bcryptjs": "^3.0.2",
     "better-auth": "^1.2.7",
     "date-fns": "^4.1.0",
@@ -34,8 +36,8 @@
     "react-dom": "^19.0.0",
     "react-error-boundary": "6.0.0",
     "react-hook-form": "^7.56.1",
-    "shext": "0.2.2",
     "sonner": "^2.0.3",
+    "wagmi": "^2.15.6",
     "zod": "^3.25.5"
   },
   "devDependencies": {
