@@ -2,7 +2,7 @@
 
 import { StatsCard } from '@/components/shared/stats-card';
 import { RaffleCard } from '@/components/raffles/raffle-card';
-import { Card, CardContent, CardHeader, CardTitle } from '@repo/ui/components/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/ui/components/card';
 import { Button } from '@repo/ui/components/button';
 import { 
   Ticket, 
@@ -11,16 +11,19 @@ import {
   Activity, 
   Plus,
   ArrowRight,
-  AlertTriangle
+  AlertTriangle,
+  Copy
 } from 'lucide-react';
 import Link from 'next/link';
 import { useUser } from '@/lib/providers/user-provider';
 import { useActionQuery } from '@/hooks/use-action';
 import { getRaffleStats, getOrganizerRaffles } from '@/actions/raffle/get';
 import { Badge } from '@repo/ui/components/badge';
+import { toast } from 'sonner';
 
 export default function DashboardPage() {
   const { user } = useUser();
+  const iframeUrl = `https://raliz.xyz/raffles/${user?.walletAddress}`;
 
   // Get statistics
   const { data: stats } = useActionQuery({
@@ -196,6 +199,34 @@ export default function DashboardPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Web Integration part  */}
+      <Card>
+        <CardHeader> 
+          <CardTitle>Web Integration</CardTitle>
+          <CardDescription>
+            Integrate your raffle directly into your website. Copy and paste the following iframe into your website.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col space-y-2">
+            <div className="text-sm text-muted-foreground whitespace-pre-wrap">
+              {`<iframe src="${iframeUrl}" width="100%" height="500px"></iframe>`}
+            </div>
+            <div className="flex flex-row space-x-2">
+              <Button variant="outline" size="sm" onClick={() => {
+                navigator.clipboard.writeText(iframeUrl);
+                toast.success('Copied to clipboard', {
+                  description: 'You can now paste this link into your website ! For more information, check the documentation.',
+                });
+              }}>
+                <Copy className="w-4 h-4 mr-2" />
+                Copy
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+        </Card>
     </div>
   );
 }
