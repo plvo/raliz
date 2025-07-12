@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import DashboardClient from './client';
+import DashboardClient from './client-dashboard';
 
 export const generateMetadata = (): Metadata => {
   return {
