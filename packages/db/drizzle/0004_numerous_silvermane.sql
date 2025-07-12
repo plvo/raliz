@@ -1,0 +1,2 @@
+ALTER TABLE "raffles" ALTER COLUMN "minimum_fan_tokens" SET DATA TYPE integer USING minimum_fan_tokens::integer;--> statement-breakpoint
+ALTER TABLE "raffles" ALTER COLUMN "minimum_fan_tokens" SET DEFAULT 50;

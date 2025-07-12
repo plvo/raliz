@@ -1,7 +1,7 @@
 'use server';
 
 import { withAction } from '@/lib/wrappers/with-action';
-import { type User, type UserInsert, eq, userTable } from '@repo/db';
+import { type CreateUser, type User, eq, userTable } from '@repo/db';
 
 export async function getWeb3User(walletAddress: string): Promise<ActionResponse<User | null>> {
   return withAction(async (db) => {
@@ -50,7 +50,7 @@ export interface Web3AuthUserInfo {
 
 export async function createWeb3User(web3AuthInfo: Web3AuthUserInfo): Promise<ActionResponse<User>> {
   return withAction(async (db) => {
-    const userData: UserInsert = {
+    const userData: CreateUser = {
       id: crypto.randomUUID(),
       walletAddress: web3AuthInfo.walletAddress,
       username: `user_${crypto.randomUUID().slice(0, 8)}`,
