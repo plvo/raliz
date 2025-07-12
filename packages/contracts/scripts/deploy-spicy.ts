@@ -63,19 +63,21 @@ async function main() {
     // 5. Créer une raffle de test
     console.log('\n🎰 Création d\'une raffle de test...');
 
-    const endDate = Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60); // 7 jours
+    const startDate = Math.floor(Date.now() / 1000); // Maintenant
+    const endDate = startDate + (7 * 24 * 60 * 60); // 7 jours
     const participationFee = ethers.parseEther('0.1'); // 0.1 CHZ
     const minimumFanTokens = ethers.parseEther('50'); // 50 PSG tokens minimum
 
     const createTx = await raliz.createRaffle(
         'Raffle de Test PSG',
-        'Une raffle de test pour les fans du PSG sur Chiliz Spicy Testnet',
-        'Maillot PSG dédicacé',
+        'Une raffle de test pour les fans du PSG sur Chiliz Spicy Testnet. Gagnez un maillot PSG dédicacé!',
         participationFee,
         psgAddress, // Require PSG tokens
         minimumFanTokens,
-        1, // 1 gagnant
-        endDate
+        startDate, // Date de début
+        endDate,   // Date de fin
+        1,         // 1 gagnant
+        100        // Max 100 participants
     );
     await createTx.wait();
 

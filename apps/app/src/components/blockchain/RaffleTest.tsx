@@ -8,12 +8,12 @@ import { Input } from '@repo/ui/components/input';
 import { Label } from '@repo/ui/components/label';
 import { Badge } from '@repo/ui/components/badge';
 import { Separator } from '@repo/ui/components/separator';
-import {
-    blockchainService,
+import BlockchainService, {
     type RaffleInfo,
     type RaffleStatus
 } from '@/services/blockchain.service';
-import { CONTRACT_ADDRESSES } from '@/lib/web3-config';
+import { CONTRACT_ADDRESSES, RPC_CONFIG } from '@/lib/web3-config';
+import { ethers } from 'ethers';
 
 interface RaffleWithStatus {
     id: number;
@@ -22,6 +22,19 @@ interface RaffleWithStatus {
     isEligible: boolean;
     hasParticipated: boolean;
 }
+
+// ✅ Création du service en dehors du composant pour éviter les re-renders
+const createBlockchainService = () => {
+    const provider = new ethers.JsonRpcProvider(RPC_CONFIG.url);
+    // Pour les opérations de lecture seule, on peut utiliser le provider sans signer
+    const dummySigner = ethers.Wallet.createRandom().connect(provider);
+    return new BlockchainService(provider, dummySigner);
+};
+
+// ✅ Fonction utilitaire pour formatter les CHZ
+const formatCHZ = (weiValue: bigint, decimals = 4): string => {
+    return ethers.formatEther(weiValue);
+};
 
 export function RaffleTest() {
     const { address, isConnected } = useAccount();
@@ -35,6 +48,8 @@ export function RaffleTest() {
 
         setLoading(true);
         try {
+            // ✅ Instanciation du service
+            const blockchainService = createBlockchainService();
             const count = await blockchainService.getRaffleCount();
             console.log(`Total raffles: ${count}`);
 
@@ -195,7 +210,7 @@ export function RaffleTest() {
                                         <h4 className="font-medium">Informations générales</h4>
                                         <div className="text-sm space-y-1">
                                             <p><strong>Prix:</strong> {raffle.info.prizeDescription}</p>
-                                            <p><strong>Frais de participation:</strong> {blockchainService.formatCHZ(raffle.info.participationFee)} CHZ</p>
+                                            <p><strong>Frais de participation:</strong> {formatCHZ(raffle.info.participationFee)} CHZ</p>
                                             <p><strong>Gagnants max:</strong> {raffle.info.maxWinners.toString()}</p>
                                             <p><strong>Organisateur:</strong> {raffle.info.organizer}</p>
                                         </div>
@@ -205,9 +220,9 @@ export function RaffleTest() {
                                         <h4 className="font-medium">Exigences & Statut</h4>
                                         <div className="text-sm space-y-1">
                                             <p><strong>Token requis:</strong> {getFanTokenName(raffle.info.requiredFanToken)}</p>
-                                            <p><strong>Minimum requis:</strong> {blockchainService.formatCHZ(raffle.info.minimumFanTokens)} tokens</p>
+                                            <p><strong>Minimum requis:</strong> {formatCHZ(raffle.info.minimumFanTokens)} tokens</p>
                                             <p><strong>Participants:</strong> {raffle.status.participantCount.toString()}</p>
-                                            <p><strong>Fonds collectés:</strong> {blockchainService.formatCHZ(raffle.status.totalFunds)} CHZ</p>
+                                            <p><strong>Fonds collectés:</strong> {formatCHZ(raffle.status.totalFunds)} CHZ</p>
                                         </div>
                                     </div>
                                 </div>

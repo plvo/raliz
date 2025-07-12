@@ -5,8 +5,9 @@ import { useAccount } from 'wagmi';
 import { Button } from '@repo/ui/components/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@repo/ui/components/card';
 import { Badge } from '@repo/ui/components/badge';
-import { blockchainService } from '@/services/blockchain.service';
-import { CONTRACT_ADDRESSES } from '@/lib/web3-config';
+import BlockchainService from '@/services/blockchain.service';
+import { CONTRACT_ADDRESSES, RPC_CONFIG } from '@/lib/web3-config';
+import { ethers } from 'ethers';
 
 interface TokenBalance {
     address: string;
@@ -28,11 +29,21 @@ export function FanTokenTest() {
         { name: 'Manchester City', symbol: 'CITY', address: CONTRACT_ADDRESSES.CITY_TOKEN },
     ];
 
+    // ✅ Création correcte d'une instance du service
+    const createBlockchainService = () => {
+        const provider = new ethers.JsonRpcProvider(RPC_CONFIG.url);
+        // Pour les opérations de lecture seule, on peut utiliser le provider sans signer
+        const dummySigner = ethers.Wallet.createRandom().connect(provider);
+        return new BlockchainService(provider, dummySigner);
+    };
+
     const checkTokenBalances = async () => {
         if (!isConnected || !address) return;
 
         setLoading(true);
         try {
+            // ✅ Instanciation du service
+            const blockchainService = createBlockchainService();
             const balances: TokenBalance[] = [];
 
             for (const token of fanTokens) {

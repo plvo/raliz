@@ -286,4 +286,4 @@ class BlockchainService {
     }
 }
 
-export const blockchainService = new BlockchainService(new ethers.JsonRpcProvider(RPC_CONFIG.url), new ethers.Signer(RPC_CONFIG.url));
+export default BlockchainService;
