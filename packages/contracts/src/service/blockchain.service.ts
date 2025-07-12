@@ -29,6 +29,7 @@ export interface CreateRaffleParams {
     minimumFanTokens: string; // Minimum requis
     maxWinners: number;
     endDate: Date;
+    maxParticipants: number;
 }
 
 export class BlockchainService {
@@ -36,18 +37,19 @@ export class BlockchainService {
     private readonly signer: ethers.Signer;
 
     private readonly ralizContract: Raliz;
-    private readonly psgTokenContract: MockFanToken;
-    private readonly barTokenContract: MockFanToken;
-    private readonly cityTokenContract: MockFanToken;
 
-    constructor(provider: ethers.JsonRpcProvider, signer: ethers.Signer) {
+    constructor(provider: ethers.JsonRpcProvider, signer: ethers.Signer, ralizContractAddress: string | null) {
         this.provider = provider;
         this.signer = signer;
 
-        this.ralizContract = createRalizContract(CONTRACT_ADDRESSES.RALIZ, this.provider);
-        this.psgTokenContract = createMockFanTokenContract(CONTRACT_ADDRESSES.PSG_TOKEN, this.provider);
-        this.barTokenContract = createMockFanTokenContract(CONTRACT_ADDRESSES.BAR_TOKEN, this.provider);
-        this.cityTokenContract = createMockFanTokenContract(CONTRACT_ADDRESSES.CITY_TOKEN, this.provider);
+        if (ralizContractAddress) {
+            this.ralizContract = createRalizContract(ralizContractAddress, this.provider);
+        } else {
+            if (!CONTRACT_ADDRESSES.RALIZ || CONTRACT_ADDRESSES.RALIZ === '') {
+                throw new Error('RALIZ contract address is not defined');
+            }
+            this.ralizContract = createRalizContract(CONTRACT_ADDRESSES.RALIZ as string, this.provider);
+        }
     }
 
     // ===== HELPER METHODS =====
@@ -57,7 +59,7 @@ export class BlockchainService {
 
     private getContract(signerOrProvider?: ethers.Signer | ethers.Provider): Raliz {
         const provider = signerOrProvider || this.getProvider();
-        return createRalizContract(CONTRACT_ADDRESSES.RALIZ, provider);
+        return createRalizContract(CONTRACT_ADDRESSES.RALIZ as string, provider);
     }
 
     private getTokenContract(tokenAddress: string, signerOrProvider?: ethers.Signer | ethers.Provider): MockFanToken {
@@ -174,19 +176,19 @@ export class BlockchainService {
 
     /**
      * Crée une nouvelle raffle
+     * Note: L'organisateur doit être autorisé au préalable par un admin
      */
     async createRaffle(params: CreateRaffleParams, signer: ethers.Signer): Promise<{
         transaction: ethers.ContractTransactionResponse;
         raffleId?: number;
     }> {
-        const contract = createRalizContract(CONTRACT_ADDRESSES.RALIZ, signer);
+        const contract = createRalizContract(CONTRACT_ADDRESSES.RALIZ as string, signer);
 
         const participationFeeWei = ethers.parseEther(params.participationFee);
         const minimumFanTokensWei = ethers.parseUnits(params.minimumFanTokens, 18);
         const endDateTimestamp = Math.floor(params.endDate.getTime() / 1000);
         const startDateTimestamp = Math.floor(Date.now() / 1000);
 
-        // ✅ TypeScript valide automatiquement les paramètres !
         const tx = await contract.createRaffle(
             params.title,
             params.description,
@@ -196,7 +198,7 @@ export class BlockchainService {
             startDateTimestamp,
             endDateTimestamp,
             params.maxWinners,
-            100 // maxParticipants par défaut
+            params.maxParticipants
         );
 
         return { transaction: tx };
@@ -210,7 +212,7 @@ export class BlockchainService {
         participationFee: string,
         signer: ethers.Signer
     ): Promise<ethers.ContractTransactionResponse> {
-        const contract = createRalizContract(CONTRACT_ADDRESSES.RALIZ, signer);
+        const contract = createRalizContract(CONTRACT_ADDRESSES.RALIZ as string, signer);
         const feeWei = ethers.parseEther(participationFee);
 
         return await contract.participate(raffleId, { value: feeWei });
@@ -220,27 +222,51 @@ export class BlockchainService {
      * Tire au sort les gagnants manuellement (organizer seulement)
      */
     async drawWinners(raffleId: number, winners: string[], signer: ethers.Signer): Promise<ethers.ContractTransactionResponse> {
-        const contract = createRalizContract(CONTRACT_ADDRESSES.RALIZ, signer);
+        const contract = createRalizContract(CONTRACT_ADDRESSES.RALIZ as string, signer);
         return await contract.drawWinners(raffleId, winners);
     }
 
     /**
      * Tire au sort les gagnants automatiquement on-chain (organizer seulement)
      * Utilise l'algorithme pseudo-aléatoire intégré dans le smart contract
-     * NOTE: Types seront mis à jour après recompilation des contrats
      */
     async drawWinnersAutomatically(raffleId: number, signer: ethers.Signer): Promise<ethers.ContractTransactionResponse> {
-        const contract = createRalizContract(CONTRACT_ADDRESSES.RALIZ, signer);
-        // @ts-ignore - Fonction ajoutée au contrat, types seront regénérés après compilation
+        const contract = createRalizContract(CONTRACT_ADDRESSES.RALIZ as string, signer);
         return await contract.drawWinnersAutomatically(raffleId);
     }
 
     /**
-     * Retire les fonds d'une raffle (organizer seulement)
+     * Retire les fonds d'une raffle (admin seulement)
      */
     async withdrawRaffleFunds(raffleId: number, signer: ethers.Signer): Promise<ethers.ContractTransactionResponse> {
-        const contract = createRalizContract(CONTRACT_ADDRESSES.RALIZ, signer);
+        const contract = createRalizContract(CONTRACT_ADDRESSES.RALIZ as string, signer);
         return await contract.withdrawRaffleFunds(raffleId);
+    }
+
+    // ===== ORGANIZER AUTHORIZATION METHODS =====
+
+    /**
+     * Vérifie si une adresse est autorisée comme organisateur
+     */
+    async isAuthorizedOrganizer(organizerAddress: string): Promise<boolean> {
+        const contract = this.getContract();
+        return await contract.authorizedOrganizers(organizerAddress);
+    }
+
+    /**
+     * Autorise un nouvel organisateur (admin seulement)
+     */
+    async authorizeOrganizer(organizerAddress: string, adminSigner: ethers.Signer): Promise<ethers.ContractTransactionResponse> {
+        const contract = createRalizContract(CONTRACT_ADDRESSES.RALIZ as string, adminSigner);
+        return await contract.authorizeOrganizer(organizerAddress);
+    }
+
+    /**
+     * Révoque l'autorisation d'un organisateur (admin seulement)
+     */
+    async revokeOrganizer(organizerAddress: string, adminSigner: ethers.Signer): Promise<ethers.ContractTransactionResponse> {
+        const contract = createRalizContract(CONTRACT_ADDRESSES.RALIZ as string, adminSigner);
+        return await contract.revokeOrganizer(organizerAddress);
     }
 
     // ===== UTILITY METHODS =====

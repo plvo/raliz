@@ -16,8 +16,7 @@
     "deploy:local": "hardhat run src/scripts/deploy.ts --network localhost",
     "deploy:tokens": "hardhat run src/scripts/deploy-tokens.ts --network chiliz-testnet",
     "deploy:tokens:local": "hardhat run src/scripts/deploy-tokens.ts --network localhost",
-    "deploy:spicy": "hardhat run src/scripts/deploy-spicy.ts --network chiliz-testnet",
-    "deploy:spicy-light": "hardhat run src/scripts/deploy-spicy-light.ts --network chiliz-testnet"
+    "deploy:spicy": "hardhat run src/scripts/deploy-spicy.ts --network chiliz-testnet"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-ethers": "^3.0.9",

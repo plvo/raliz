@@ -27,11 +27,12 @@ export const CHILIZ_SPICY_TESTNET = {
 } as const;
 
 // Adresses des contrats déployés sur Spicy Testnet
+// Variables propagées automatiquement par Turborepo depuis .env.local à la racine
 export const CONTRACT_ADDRESSES = {
-    RALIZ: process.env.NEXT_PUBLIC_RALIZ_CONTRACT_ADDRESS || '',
-    PSG_TOKEN: process.env.NEXT_PUBLIC_PSG_TOKEN_ADDRESS || '',
-    BAR_TOKEN: process.env.NEXT_PUBLIC_BAR_TOKEN_ADDRESS || '',
-    CITY_TOKEN: process.env.NEXT_PUBLIC_CITY_TOKEN_ADDRESS || '',
+    RALIZ: process.env.NEXT_PUBLIC_RALIZ_CONTRACT_ADDRESS,
+    PSG_TOKEN: process.env.NEXT_PUBLIC_PSG_TOKEN_ADDRESS,
+    BAR_TOKEN: process.env.NEXT_PUBLIC_BAR_TOKEN_ADDRESS,
+    CITY_TOKEN: process.env.NEXT_PUBLIC_CITY_TOKEN_ADDRESS,
 } as const;
 
 // Configuration RPC pour ethers.js

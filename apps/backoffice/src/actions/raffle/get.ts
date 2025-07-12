@@ -8,7 +8,8 @@ import {
     participationTable,
     winnerTable,
     userTable,
-    type Raffle
+    type Raffle,
+    type Organizer
 } from '@repo/db';
 import { desc, eq, count, and } from '@repo/db';
 
@@ -16,21 +17,9 @@ import { desc, eq, count, and } from '@repo/db';
  * Récupère toutes les raffles de l'organisateur connecté
  * Pour le moment l'auth est ouverte, donc on prend les raffles du premier organisateur
  */
-export async function getOrganizerRaffles() {
+export async function getOrganizerRaffles(organizer: Organizer) {
     return withAction<Raffle[]>(async (db) => {
-        // Récupérer le premier organisateur
-        const organizers = await db
-            .select()
-            .from(organizerTable)
-            .orderBy(desc(organizerTable.createdAt))
-            .limit(1);
-
-        if (organizers.length === 0) {
-            throw new Error('Aucun organisateur trouvé');
-        }
-
-        const organizer = organizers[0];
-
+        console.log('Fetching raffles for organizer:', organizer.id);
         const raffles = await db
             .select()
             .from(raffleTable)
@@ -38,7 +27,7 @@ export async function getOrganizerRaffles() {
             .orderBy(desc(raffleTable.createdAt));
 
         return raffles;
-    }); // Auth ouverte pour le moment
+    });
 }
 
 /**
@@ -108,7 +97,7 @@ export async function getRaffleById(id: string) {
             participationsCount: participationsCountResult[0]?.count || 0,
             winnersCount: winnersCountResult[0]?.count || 0,
         };
-    }); // Auth ouverte pour le moment
+    });
 }
 
 /**
@@ -156,41 +145,13 @@ export async function getRaffleParticipants(raffleId: string) {
             .orderBy(desc(participationTable.participatedAt));
 
         return participants;
-    }); // Auth ouverte pour le moment
+    });
 }
 
 /**
- * Récupère toutes les raffles avec un statut spécifique
+ * Récupère les statistiques des raffles de l'organisateur donné
  */
-export async function getRafflesByStatus(status: 'DRAFT' | 'ACTIVE' | 'ENDED') {
-    return withAction<Raffle[]>(async (db) => {
-        // Récupérer le premier organisateur
-        const organizers = await db
-            .select()
-            .from(organizerTable)
-            .orderBy(desc(organizerTable.createdAt))
-            .limit(1);
-
-        if (organizers.length === 0) {
-            throw new Error('Aucun organisateur trouvé');
-        }
-
-        const organizer = organizers[0];
-
-        const raffles = await db
-            .select()
-            .from(raffleTable)
-            .where(and(eq(raffleTable.organizerId, organizer.id), eq(raffleTable.status, status)))
-            .orderBy(desc(raffleTable.createdAt));
-
-        return raffles;
-    }); // Auth ouverte pour le moment
-}
-
-/**
- * Récupère les statistiques des raffles de l'organisateur
- */
-export async function getRaffleStats() {
+export async function getRaffleStats(organizer: Organizer) {
     return withAction<{
         totalRaffles: number;
         activeRaffles: number;
@@ -199,19 +160,6 @@ export async function getRaffleStats() {
         totalParticipations: number;
         totalWinners: number;
     }>(async (db) => {
-        // Récupérer le premier organisateur
-        const organizers = await db
-            .select()
-            .from(organizerTable)
-            .orderBy(desc(organizerTable.createdAt))
-            .limit(1);
-
-        if (organizers.length === 0) {
-            throw new Error('Aucun organisateur trouvé');
-        }
-
-        const organizer = organizers[0];
-
         const [
             totalRafflesResult,
             activeRafflesResult,
@@ -225,15 +173,15 @@ export async function getRaffleStats() {
             db
                 .select({ count: count() })
                 .from(raffleTable)
-                .where(eq(raffleTable.organizerId, organizer.id) && eq(raffleTable.status, 'ACTIVE')),
+                .where(and(eq(raffleTable.organizerId, organizer.id), eq(raffleTable.status, 'ACTIVE'))),
             db
                 .select({ count: count() })
                 .from(raffleTable)
-                .where(eq(raffleTable.organizerId, organizer.id) && eq(raffleTable.status, 'ENDED')),
+                .where(and(eq(raffleTable.organizerId, organizer.id), eq(raffleTable.status, 'ENDED'))),
             db
                 .select({ count: count() })
                 .from(raffleTable)
-                .where(eq(raffleTable.organizerId, organizer.id) && eq(raffleTable.status, 'DRAFT')),
+                .where(and(eq(raffleTable.organizerId, organizer.id), eq(raffleTable.status, 'DRAFT'))),
         ]);
 
         // Compter les participations et gagnants pour toutes les raffles de l'organisateur
@@ -258,5 +206,5 @@ export async function getRaffleStats() {
             totalParticipations: totalParticipationsResult[0]?.count || 0,
             totalWinners: totalWinnersResult[0]?.count || 0,
         };
-    }); // Auth ouverte pour le moment
+    });
 } 
