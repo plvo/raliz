@@ -17,6 +17,7 @@
     "@hookform/resolvers": "^5.1.1",
     "@radix-ui/react-slot": "^1.2.3",
     "@repo/db": "*",
+    "@repo/contracts": "*",
     "@repo/ui": "*",
     "@tanstack/react-query": "^5.82.0",
     "@tanstack/react-table": "^8.21.3",

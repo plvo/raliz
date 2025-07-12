@@ -1,30 +1,32 @@
 import { ethers } from 'ethers';
 import { CONTRACT_ADDRESSES, RPC_CONFIG } from '@/lib/web3-config';
+import { createRalizContract, createMockFanTokenContract, type Raliz, type MockFanToken } from '@repo/contracts';
+
+// ===== INTERFACES SIMPLIFIÉES =====
+// Ces interfaces sont maintenant basées sur les vrais types du contrat
 
 export interface RaffleInfo {
     title: string;
     description: string;
-    prizeDescription: string;
     participationFee: bigint;
     requiredFanToken: string;
     minimumFanTokens: bigint;
-    maxWinners: bigint;
     organizer: string;
 }
 
 export interface RaffleStatus {
     startDate: bigint;
     endDate: bigint;
-    status: number; // 0: Active, 1: Ended, 2: Cancelled
+    maxWinners: bigint;
+    maxParticipants: bigint;
     participantCount: bigint;
-    totalFunds: bigint;
+    isActive: boolean;
     winnersDrawn: boolean;
 }
 
 export interface CreateRaffleParams {
     title: string;
     description: string;
-    prizeDescription: string;
     participationFee: string; // En CHZ (string pour éviter les erreurs de précision)
     requiredFanToken: string; // Adresse du token requis
     minimumFanTokens: string; // Minimum requis
@@ -32,53 +34,25 @@ export interface CreateRaffleParams {
     endDate: Date;
 }
 
-// ABI simplifié du contrat Raliz avec les fonctions principales
-const RALIZ_ABI = [
-    // Events
-    'event RaffleCreated(uint256 indexed raffleId, address indexed organizer, string title, uint256 participationFee, address requiredFanToken, uint256 minimumFanTokens)',
-    'event ParticipationRegistered(uint256 indexed raffleId, address indexed participant, uint256 chzPaid, uint256 fanTokenBalance)',
-
-    // Read functions
-    'function getRaffleInfo(uint256 raffleId) view returns (string title, string description, string prizeDescription, uint256 participationFee, address requiredFanToken, uint256 minimumFanTokens, uint256 maxWinners, address organizer)',
-    'function getRaffleStatus(uint256 raffleId) view returns (uint256 startDate, uint256 endDate, uint8 status, uint256 participantCount, uint256 totalFunds, bool winnersDrawn)',
-    'function isEligibleToParticipate(uint256 raffleId, address user) view returns (bool)',
-    'function hasParticipated(uint256 raffleId, address user) view returns (bool)',
-    'function raffleCount() view returns (uint256)',
-    'function getParticipants(uint256 raffleId) view returns (address[])',
-    'function getWinners(uint256 raffleId) view returns (address[])',
-
-    // Write functions
-    'function createRaffle(string title, string description, string prizeDescription, uint256 participationFee, address requiredFanToken, uint256 minimumFanTokens, uint256 maxWinners, uint256 endDate) returns (uint256)',
-    'function participate(uint256 raffleId) payable',
-    'function drawWinners(uint256 raffleId)',
-    'function withdrawRaffleFunds(uint256 raffleId)',
-] as const;
-
-// ABI simplifié pour les tokens ERC20 (PSG, BAR, CITY)
-const ERC20_ABI = [
-    'function balanceOf(address owner) view returns (uint256)',
-    'function decimals() view returns (uint8)',
-    'function symbol() view returns (string)',
-    'function name() view returns (string)',
-] as const;
-
 class BlockchainService {
     private readonly provider: ethers.JsonRpcProvider;
     private readonly signer: ethers.Signer;
 
-    private readonly ralizContract: ethers.Contract;
-    private readonly psgTokenContract: ethers.Contract;
-    private readonly barTokenContract: ethers.Contract;
-    private readonly cityTokenContract: ethers.Contract;
+    // ✅ Contrats typés avec les vrais types auto-générés
+    private readonly ralizContract: Raliz;
+    private readonly psgTokenContract: MockFanToken;
+    private readonly barTokenContract: MockFanToken;
+    private readonly cityTokenContract: MockFanToken;
 
     constructor(provider: ethers.JsonRpcProvider, signer: ethers.Signer) {
         this.provider = provider;
         this.signer = signer;
 
-        this.ralizContract = new ethers.Contract(CONTRACT_ADDRESSES.RALIZ, RALIZ_ABI, this.provider);
-        this.psgTokenContract = new ethers.Contract(CONTRACT_ADDRESSES.PSG_TOKEN, ERC20_ABI, this.provider);
-        this.barTokenContract = new ethers.Contract(CONTRACT_ADDRESSES.BAR_TOKEN, ERC20_ABI, this.provider);
-        this.cityTokenContract = new ethers.Contract(CONTRACT_ADDRESSES.CITY_TOKEN, ERC20_ABI, this.provider);
+        // ✅ Utilisation des helpers typés du package contracts
+        this.ralizContract = createRalizContract(CONTRACT_ADDRESSES.RALIZ, this.provider);
+        this.psgTokenContract = createMockFanTokenContract(CONTRACT_ADDRESSES.PSG_TOKEN, this.provider);
+        this.barTokenContract = createMockFanTokenContract(CONTRACT_ADDRESSES.BAR_TOKEN, this.provider);
+        this.cityTokenContract = createMockFanTokenContract(CONTRACT_ADDRESSES.CITY_TOKEN, this.provider);
     }
 
     // ===== HELPER METHODS =====
@@ -86,14 +60,14 @@ class BlockchainService {
         return new ethers.JsonRpcProvider(RPC_CONFIG.url);
     }
 
-    private getContract(signerOrProvider?: ethers.Signer | ethers.Provider): ethers.Contract {
+    private getContract(signerOrProvider?: ethers.Signer | ethers.Provider): Raliz {
         const provider = signerOrProvider || this.getProvider();
-        return new ethers.Contract(CONTRACT_ADDRESSES.RALIZ, RALIZ_ABI, provider);
+        return createRalizContract(CONTRACT_ADDRESSES.RALIZ, provider);
     }
 
-    private getTokenContract(tokenAddress: string, signerOrProvider?: ethers.Signer | ethers.Provider): ethers.Contract {
+    private getTokenContract(tokenAddress: string, signerOrProvider?: ethers.Signer | ethers.Provider): MockFanToken {
         const provider = signerOrProvider || this.getProvider();
-        return new ethers.Contract(tokenAddress, ERC20_ABI, provider);
+        return createMockFanTokenContract(tokenAddress, provider);
     }
 
     // ===== READ METHODS =====
@@ -108,12 +82,10 @@ class BlockchainService {
         return {
             title: result[0],
             description: result[1],
-            prizeDescription: result[2],
-            participationFee: result[3],
-            requiredFanToken: result[4],
-            minimumFanTokens: result[5],
-            maxWinners: result[6],
-            organizer: result[7],
+            participationFee: result[2],
+            requiredFanToken: result[3],
+            minimumFanTokens: result[4],
+            organizer: result[5],
         };
     }
 
@@ -127,10 +99,11 @@ class BlockchainService {
         return {
             startDate: result[0],
             endDate: result[1],
-            status: result[2],
-            participantCount: result[3],
-            totalFunds: result[4],
-            winnersDrawn: result[5],
+            maxWinners: result[2],
+            maxParticipants: result[3],
+            participantCount: result[4],
+            isActive: result[5],
+            winnersDrawn: result[6],
         };
     }
 
@@ -139,7 +112,8 @@ class BlockchainService {
      */
     async isEligibleToParticipate(raffleId: number, userAddress: string): Promise<boolean> {
         const contract = this.getContract();
-        return await contract.isEligibleToParticipate(raffleId, userAddress);
+        const result = await contract.isEligibleToParticipate(raffleId, userAddress);
+        return result[0]; // Premier élément du tuple = eligible
     }
 
     /**
@@ -155,7 +129,7 @@ class BlockchainService {
      */
     async getRaffleCount(): Promise<number> {
         const contract = this.getContract();
-        const count = await contract.raffleCount();
+        const count = await contract.getTotalRaffles();
         return Number(count);
     }
 
@@ -210,21 +184,24 @@ class BlockchainService {
         transaction: ethers.ContractTransactionResponse;
         raffleId?: number;
     }> {
-        const contract = this.getContract(signer);
+        const contract = createRalizContract(CONTRACT_ADDRESSES.RALIZ, signer);
 
         const participationFeeWei = ethers.parseEther(params.participationFee);
-        const minimumFanTokensWei = ethers.parseUnits(params.minimumFanTokens, 18); // Assuming 18 decimals
+        const minimumFanTokensWei = ethers.parseUnits(params.minimumFanTokens, 18);
         const endDateTimestamp = Math.floor(params.endDate.getTime() / 1000);
+        const startDateTimestamp = Math.floor(Date.now() / 1000);
 
+        // ✅ TypeScript valide automatiquement les paramètres !
         const tx = await contract.createRaffle(
             params.title,
             params.description,
-            params.prizeDescription,
             participationFeeWei,
             params.requiredFanToken,
             minimumFanTokensWei,
+            startDateTimestamp,
+            endDateTimestamp,
             params.maxWinners,
-            endDateTimestamp
+            100 // maxParticipants par défaut
         );
 
         return { transaction: tx };
@@ -238,7 +215,7 @@ class BlockchainService {
         participationFee: string,
         signer: ethers.Signer
     ): Promise<ethers.ContractTransactionResponse> {
-        const contract = this.getContract(signer);
+        const contract = createRalizContract(CONTRACT_ADDRESSES.RALIZ, signer);
         const feeWei = ethers.parseEther(participationFee);
 
         return await contract.participate(raffleId, { value: feeWei });
@@ -247,16 +224,16 @@ class BlockchainService {
     /**
      * Tire au sort les gagnants (organizer seulement)
      */
-    async drawWinners(raffleId: number, signer: ethers.Signer): Promise<ethers.ContractTransactionResponse> {
-        const contract = this.getContract(signer);
-        return await contract.drawWinners(raffleId);
+    async drawWinners(raffleId: number, winners: string[], signer: ethers.Signer): Promise<ethers.ContractTransactionResponse> {
+        const contract = createRalizContract(CONTRACT_ADDRESSES.RALIZ, signer);
+        return await contract.drawWinners(raffleId, winners);
     }
 
     /**
      * Retire les fonds d'une raffle (organizer seulement)
      */
     async withdrawRaffleFunds(raffleId: number, signer: ethers.Signer): Promise<ethers.ContractTransactionResponse> {
-        const contract = this.getContract(signer);
+        const contract = createRalizContract(CONTRACT_ADDRESSES.RALIZ, signer);
         return await contract.withdrawRaffleFunds(raffleId);
     }
 

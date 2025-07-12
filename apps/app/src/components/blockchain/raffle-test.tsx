@@ -90,17 +90,14 @@ export function RaffleTest() {
         }
     }, [isConnected, address, loadRaffles]);
 
-    const getStatusBadge = (status: number) => {
-        switch (status) {
-            case 0:
-                return <Badge variant="default">Active</Badge>;
-            case 1:
-                return <Badge variant="secondary">Terminée</Badge>;
-            case 2:
-                return <Badge variant="destructive">Annulée</Badge>;
-            default:
-                return <Badge variant="outline">Inconnu</Badge>;
+    const getStatusBadge = (isActive: boolean, winnersDrawn: boolean) => {
+        if (winnersDrawn) {
+            return <Badge variant="secondary">Terminée</Badge>;
         }
+        if (isActive) {
+            return <Badge variant="default">Active</Badge>;
+        }
+        return <Badge variant="destructive">Inactive</Badge>;
     };
 
     const formatDate = (timestamp: bigint) => {
@@ -201,7 +198,7 @@ export function RaffleTest() {
                                             {raffle.info.description}
                                         </p>
                                     </div>
-                                    {getStatusBadge(raffle.status.status)}
+                                    {getStatusBadge(raffle.status.isActive, raffle.status.winnersDrawn)}
                                 </div>
                             </CardHeader>
                             <CardContent className="space-y-4">
@@ -209,9 +206,9 @@ export function RaffleTest() {
                                     <div className="space-y-2">
                                         <h4 className="font-medium">Informations générales</h4>
                                         <div className="text-sm space-y-1">
-                                            <p><strong>Prix:</strong> {raffle.info.prizeDescription}</p>
+                                            <p><strong>Description:</strong> {raffle.info.description}</p>
                                             <p><strong>Frais de participation:</strong> {formatCHZ(raffle.info.participationFee)} CHZ</p>
-                                            <p><strong>Gagnants max:</strong> {raffle.info.maxWinners.toString()}</p>
+                                            <p><strong>Gagnants max:</strong> {raffle.status.maxWinners.toString()}</p>
                                             <p><strong>Organisateur:</strong> {raffle.info.organizer}</p>
                                         </div>
                                     </div>
@@ -222,7 +219,7 @@ export function RaffleTest() {
                                             <p><strong>Token requis:</strong> {getFanTokenName(raffle.info.requiredFanToken)}</p>
                                             <p><strong>Minimum requis:</strong> {formatCHZ(raffle.info.minimumFanTokens)} tokens</p>
                                             <p><strong>Participants:</strong> {raffle.status.participantCount.toString()}</p>
-                                            <p><strong>Fonds collectés:</strong> {formatCHZ(raffle.status.totalFunds)} CHZ</p>
+                                            <p><strong>Max participants:</strong> {raffle.status.maxParticipants.toString()}</p>
                                         </div>
                                     </div>
                                 </div>
