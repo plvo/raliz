@@ -77,7 +77,6 @@ class BlockchainService {
      */
     async getRaffleInfo(raffleId: number): Promise<RaffleInfo> {
         const contract = this.getContract();
-        // ✅ Plus besoin de spécifier l'ABI - TypeScript connait la méthode !
         const result = await contract.getRaffleInfo(raffleId);
 
         return {
@@ -161,7 +160,6 @@ class BlockchainService {
     }> {
         const contract = this.getTokenContract(tokenAddress);
 
-        // ✅ TypeScript connait les méthodes ERC20 !
         const [balance, decimals, symbol, name] = await Promise.all([
             contract.balanceOf(userAddress),
             contract.decimals(),
