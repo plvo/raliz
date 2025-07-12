@@ -9,6 +9,8 @@ export async function getWeb3User(walletAddress: string): Promise<ActionResponse
       where: eq(userTable.walletAddress, walletAddress),
     });
 
+    console.log('getWeb3User', { address: walletAddress, user });
+
     return user ?? null;
   });
 }
@@ -25,6 +27,8 @@ export async function loginOrCreateWeb3User(
     const user = await db.query.userTable.findFirst({
       where: eq(userTable.walletAddress, walletAddress),
     });
+
+    console.log({ address: walletAddress, user });
 
     if (!user) {
       const newUser = await createWeb3User({ walletAddress });

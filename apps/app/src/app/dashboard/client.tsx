@@ -1,12 +1,12 @@
 'use client';
 
-import { WalletButton } from '@/components/shared/wallet-button';
-import { type WithUserProps, withUser } from '@/lib/wrappers/with-user';
+import { useUser } from '@/lib/providers/user-provider';
 import { Button } from '@repo/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/ui/components/card';
 import Link from 'next/link';
 
-function DashboardClient({ user, walletAddress }: WithUserProps) {
+function DashboardClient() {
+  const { user, walletAddress } = useUser();
   if (!user) {
     return (
       <div className='flex flex-col items-center justify-center h-screen gap-4'>
@@ -106,4 +106,4 @@ function DashboardClient({ user, walletAddress }: WithUserProps) {
   );
 }
 
-export default withUser(DashboardClient);
+export default DashboardClient;
