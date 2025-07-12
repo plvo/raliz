@@ -41,7 +41,6 @@ export default async function RootLayout({
         <Providers web3authInitialState={web3authInitialState}>
           <NavApp />
           {children}
-
           <Toaster richColors position='bottom-right' />
         </Providers>
       </body>
