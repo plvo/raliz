@@ -3,12 +3,11 @@
 import {
   type UseMutationResult,
   type UseQueryResult,
-  type UseSuspenseQueryResult,
   useMutation,
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
-import { type UseQueryOptions, useSuspenseQuery } from '@tanstack/react-query';
+import type { UseQueryOptions } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 type QueryKeyT = string[];
