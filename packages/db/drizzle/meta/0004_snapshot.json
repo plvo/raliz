@@ -1,5 +1,5 @@
 {
-  "id": "fa78c5b4-c49d-41df-baa8-aeff5366d0a7",
+  "id": "b7cff1e6-894c-4def-b958-53920ec64066",
   "prevId": "14844048-15fc-4a7e-8537-ae4b64c30d4e",
   "version": "7",
   "dialect": "postgresql",
@@ -382,6 +382,12 @@
         "fan_token_address": {
           "name": "fan_token_address",
           "type": "varchar(42)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fan_token_symbol": {
+          "name": "fan_token_symbol",
+          "type": "varchar(10)",
           "primaryKey": false,
           "notNull": true
         },
@@ -784,10 +790,10 @@
         },
         "minimum_fan_tokens": {
           "name": "minimum_fan_tokens",
-          "type": "integer",
+          "type": "numeric(18, 8)",
           "primaryKey": false,
           "notNull": true,
-          "default": 50
+          "default": "'50'"
         },
         "start_date": {
           "name": "start_date",

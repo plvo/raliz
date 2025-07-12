@@ -35,6 +35,8 @@ export function useWallet() {
         throw new Error('Failed to connect to wallet');
       }
 
+      
+
       return loginOrCreateWeb3User(walletAddress);
     },
     successEvent: {

@@ -1,149 +1,114 @@
 'use server';
 
 import { withAction } from '@/lib/wrappers/with-action';
-import { 
-    createRaffleSchema, 
-    type CreateRaffleInput,
-    confirmRaffleCreationSchema,
-    type ConfirmRaffleCreationInput,
-    cancelRaffleCreationSchema,
-    type CancelRaffleCreationInput
-} from '@/schemas/raffle';
-import { raffleTable, organizerTable, type Raffle } from '@repo/db';
-import { desc, eq } from '@repo/db';
-import { CONTRACT_ADDRESSES, type CreateRaffleParams } from '@repo/contracts';
+import { createRaffleSchema, type CreateRaffleInput } from '@/schemas/raffle';
+import { raffleTable, type Raffle, type Organizer } from '@repo/db';
+import { eq } from '@repo/db';
 
 /**
- * Prépare une nouvelle raffle en base de données et retourne les paramètres pour la transaction blockchain
- * Le frontend devra ensuite signer et envoyer la transaction via le wallet connecté
+ * Étape 1 : Créer la raffle en base de données (status DRAFT)
+ * La transaction blockchain sera faite côté client
  */
-export async function prepareRaffleCreation(data: CreateRaffleInput) {
-    return withAction<{ raffle: Raffle; blockchainParams: CreateRaffleParams }>(async (db) => {
+export async function createRaffleInDB(data: CreateRaffleInput, organizer: Organizer) {
+    return withAction<{ raffle: Raffle }>(async (db) => {
+        // Debug: Let's see what arrives in the server action
+        console.log('=== DEBUG SERVER ACTION ===');
+        console.log('data:', data);
+        console.log('data.startDate:', data.startDate, 'type:', typeof data.startDate);
+        console.log('data.endDate:', data.endDate, 'type:', typeof data.endDate);
+        
+        // Parse the data with the schema - schema handles date transformation
         const validatedData = createRaffleSchema.parse(data);
-
-        // Récupérer l'organisateur actuel (premier trouvé pour le moment)
-        const organizers = await db
-            .select()
-            .from(organizerTable)
-            .orderBy(desc(organizerTable.createdAt))
-            .limit(1);
-
-        if (organizers.length === 0) {
-            throw new Error('Aucun organisateur trouvé');
-        }
-
-        const organizer = organizers[0];
-
-        // 1. Préparer les paramètres pour la transaction blockchain
-        const blockchainParams: CreateRaffleParams = {
-            title: validatedData.title,
-            description: validatedData.description,
-            participationFee: validatedData.participationPrice.toString(),
-            requiredFanToken: validatedData.smartContractAddress || '', // Adresse du fan token requis
-            minimumFanTokens: validatedData.minimumFanTokens?.toString() || '0',
-            maxWinners: Number.parseInt(validatedData.maxWinners),
-            endDate: validatedData.endDate,
-        };
-
-        // 2. Créer la raffle en base en status DRAFT (sera activée après confirmation blockchain)
+        
         const newRaffles = await db
             .insert(raffleTable)
             .values({
                 title: validatedData.title,
                 description: validatedData.description,
                 prizeDescription: validatedData.prizeDescription,
-                imageUrl: validatedData.imageUrl,
+                imageUrl: validatedData.imageUrl || null,
                 participationPrice: validatedData.participationPrice,
-                tokenSymbol: validatedData.tokenSymbol,
-                minimumFanTokens: validatedData.minimumFanTokens,
+                tokenSymbol: organizer.fanTokenSymbol,
+                minimumFanTokens: '50', // Default value (fixed for now)
                 startDate: validatedData.startDate,
                 endDate: validatedData.endDate,
                 maxWinners: validatedData.maxWinners,
-                maxParticipants: validatedData.maxParticipants,
+                maxParticipants: validatedData.maxParticipants || null,
                 organizerId: organizer.id,
-                status: 'DRAFT', // En attente de confirmation blockchain
-                smartContractAddress: CONTRACT_ADDRESSES.RALIZ,
+                status: 'DRAFT', // Waiting for blockchain confirmation
+                smartContractAddress: null, // Will be filled after transaction
                 createdAt: new Date(),
                 updatedAt: new Date(),
             })
             .returning();
 
-        const raffle = newRaffles[0];
-
-        return {
-            raffle,
-            blockchainParams,
-        };
-    }); // Auth ouverte pour le moment
-}
-
-/**
- * Confirme la création d'une raffle après que la transaction blockchain ait été effectuée
- * Met à jour le statut de DRAFT à ACTIVE
- */
-export async function confirmRaffleCreation(data: ConfirmRaffleCreationInput) {
-    return withAction<Raffle>(async (db) => {
-        const validatedData = confirmRaffleCreationSchema.parse(data);
-        // Vérifier que la raffle existe et est en statut DRAFT
-        const raffles = await db
-            .select()
-            .from(raffleTable)
-            .where(eq(raffleTable.id, validatedData.raffleId))
-            .limit(1);
-
-        if (raffles.length === 0) {
-            throw new Error('Raffle non trouvée');
-        }
-
-        const raffle = raffles[0];
-
-        if (raffle.status !== 'DRAFT') {
-            throw new Error('Cette raffle n\'est pas en attente de confirmation');
-        }
-
-        // Mettre à jour le statut et ajouter le hash de transaction
-        const updatedRaffles = await db
-            .update(raffleTable)
-            .set({
-                status: 'ACTIVE',
-                updatedAt: new Date(),
-            })
-            .where(eq(raffleTable.id, validatedData.raffleId))
-            .returning();
-
-        return updatedRaffles[0];
+        return { raffle: newRaffles[0] };
     });
 }
 
 /**
- * Annule la création d'une raffle si la transaction blockchain échoue
- * Supprime la raffle de la base de données
+ * Étape 3 : Confirmer la création après transaction blockchain réussie
  */
-export async function cancelRaffleCreation(data: CancelRaffleCreationInput) {
-    return withAction<{ success: boolean }>(async (db) => {
-        const validatedData = cancelRaffleCreationSchema.parse(data);
-        
-        // Vérifier que la raffle existe et est en statut DRAFT
+export async function confirmRaffleCreation(
+    raffleId: string, 
+    transactionHash: string, 
+    contractAddress?: string
+) {
+    return withAction<{ raffle: Raffle }>(async (db) => {
+        // Vérifier que la raffle existe et est en status DRAFT
         const raffles = await db
             .select()
             .from(raffleTable)
-            .where(eq(raffleTable.id, validatedData.raffleId))
+            .where(eq(raffleTable.id, raffleId))
             .limit(1);
 
         if (raffles.length === 0) {
-            throw new Error('Raffle non trouvée');
+            throw new Error('Raffle not found');
         }
 
         const raffle = raffles[0];
-
         if (raffle.status !== 'DRAFT') {
-            throw new Error('Seules les raffles en brouillon peuvent être annulées');
+            throw new Error('Raffle is not in draft status');
         }
 
-        // Supprimer la raffle
+        // Mettre à jour le statut et les informations blockchain
+        const updatedRaffles = await db
+            .update(raffleTable)
+            .set({
+                status: 'ACTIVE',
+                smartContractAddress: contractAddress || null,
+                updatedAt: new Date(),
+            })
+            .where(eq(raffleTable.id, raffleId))
+            .returning();
+
+        return { raffle: updatedRaffles[0] };
+    });
+}
+
+/**
+ * Supprimer la raffle si la transaction blockchain échoue
+ */
+export async function deleteRaffleOnBlockchainFailure(raffleId: string) {
+    return withAction<{ success: boolean }>(async (db) => {
+        const raffles = await db
+            .select()
+            .from(raffleTable)
+            .where(eq(raffleTable.id, raffleId))
+            .limit(1);
+
+        if (raffles.length === 0) {
+            throw new Error('Raffle not found');
+        }
+
+        const raffle = raffles[0];
+        if (raffle.status !== 'DRAFT') {
+            throw new Error('Only draft raffles can be deleted');
+        }
+
         await db
             .delete(raffleTable)
-            .where(eq(raffleTable.id, validatedData.raffleId));
+            .where(eq(raffleTable.id, raffleId));
 
         return { success: true };
     });

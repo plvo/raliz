@@ -1,82 +1,75 @@
 import { z } from 'zod';
 
+// Helper function to parse dates that might be strings or Date objects
+const dateParser = z.union([
+    z.string().transform((str) => new Date(str)),
+    z.date()
+]).transform((date) => {
+    // Ensure we always get a valid Date object
+    const parsedDate = date instanceof Date ? date : new Date(date);
+    if (Number.isNaN(parsedDate.getTime())) {
+        throw new Error('Invalid date format');
+    }
+    return parsedDate;
+});
+
 export const createRaffleSchema = z.object({
-    title: z.string().min(3, 'Le titre doit contenir au moins 3 caractères').max(255, 'Le titre ne peut pas dépasser 255 caractères'),
-    description: z.string().min(10, 'La description doit contenir au moins 10 caractères').max(1000, 'La description ne peut pas dépasser 1000 caractères'),
-    prizeDescription: z.string().min(5, 'La description du prix doit contenir au moins 5 caractères').max(500, 'La description du prix ne peut pas dépasser 500 caractères'),
-    imageUrl: z.string().url('URL de l\'image invalide').max(500, 'L\'URL ne peut pas dépasser 500 caractères').optional(),
-    participationPrice: z.string().regex(/^\d+(\.\d{1,8})?$/, 'Prix de participation invalide (max 8 décimales)'),
-    tokenSymbol: z.string().min(2, 'Symbole du token requis').max(10, 'Symbole du token trop long').default('CHZ'),
-    minimumFanTokens: z.string().regex(/^\d+(\.\d{1,8})?$/, 'Minimum de fan tokens invalide (max 8 décimales)').default('50'),
-    startDate: z.date().min(new Date(), 'La date de début doit être dans le futur'),
-    endDate: z.date(),
-    maxWinners: z.string().regex(/^\d+$/, 'Nombre de gagnants invalide').min(1).max(100),
-    maxParticipants: z.string().regex(/^\d+$/, 'Nombre de participants invalide').optional(),
-    smartContractAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/, 'Adresse du contrat smart invalide (format 0x...)').optional(),
+    title: z.string().min(3, 'The title must contain at least 3 characters').max(255, 'The title cannot exceed 255 characters'),
+    description: z.string().min(10, 'The description must contain at least 10 characters').max(1000, 'The description cannot exceed 1000 characters'),
+    prizeDescription: z.string().min(5, 'The prize description must contain at least 5 characters').max(500, 'The prize description cannot exceed 500 characters'),
+    imageUrl: z.string().url('Invalid image URL').max(500, 'The URL cannot exceed 500 characters').optional(),
+    participationPrice: z.string().regex(/^\d+(\.\d{1,8})?$/, 'Invalid participation price (max 8 decimals)'),
+    startDate: dateParser.refine(
+        (date) => date > new Date(), 
+        'The start date must be in the future'
+    ),
+    endDate: dateParser,
+    maxWinners: z.string().regex(/^\d+$/, 'Invalid number of winners').refine((val) => {
+        const num = Number.parseInt(val);
+        return num >= 1 && num <= 100;
+    }, 'Number of winners must be between 1 and 100'),
+    maxParticipants: z.string().regex(/^\d+$/, 'Invalid number of participants').refine((val) => {
+        const num = Number.parseInt(val);
+        return num >= 1;
+    }, 'Number of participants must be at least 1').optional(),
 }).refine((data) => data.endDate > data.startDate, {
-    message: 'La date de fin doit être après la date de début',
+    message: 'The end date must be after the start date',
     path: ['endDate'],
 });
 
 export type CreateRaffleInput = z.infer<typeof createRaffleSchema>;
 
 export const updateRaffleSchema = z.object({
-    id: z.string().uuid('ID raffle invalide'),
-    title: z.string().min(3, 'Le titre doit contenir au moins 3 caractères').max(255, 'Le titre ne peut pas dépasser 255 caractères').optional(),
-    description: z.string().min(10, 'La description doit contenir au moins 10 caractères').max(1000, 'La description ne peut pas dépasser 1000 caractères').optional(),
-    prizeDescription: z.string().min(5, 'La description du prix doit contenir au moins 5 caractères').max(500, 'La description du prix ne peut pas dépasser 500 caractères').optional(),
-    imageUrl: z.string().url('URL de l\'image invalide').max(500, 'L\'URL ne peut pas dépasser 500 caractères').optional(),
+    id: z.string().uuid('Invalid raffle ID'),
+    title: z.string().min(3, 'The title must contain at least 3 characters').max(255, 'The title cannot exceed 255 characters').optional(),
+    description: z.string().min(10, 'The description must contain at least 10 characters').max(1000, 'The description cannot exceed 1000 characters').optional(),
+    prizeDescription: z.string().min(5, 'The prize description must contain at least 5 characters').max(500, 'The prize description cannot exceed 500 characters').optional(),
+    imageUrl: z.string().url('Invalid image URL').max(500, 'The URL cannot exceed 500 characters').optional(),
     startDate: z.date().optional(),
     endDate: z.date().optional(),
-    maxWinners: z.string().regex(/^\d+$/, 'Nombre de gagnants invalide').optional(),
-    maxParticipants: z.string().regex(/^\d+$/, 'Nombre de participants invalide').optional(),
+    maxWinners: z.string().regex(/^\d+$/, 'Invalid number of winners').optional(),
+    maxParticipants: z.string().regex(/^\d+$/, 'Invalid number of participants').optional(),
 }).refine((data) => {
     if (data.startDate && data.endDate) {
         return data.endDate > data.startDate;
     }
     return true;
 }, {
-    message: 'La date de fin doit être après la date de début',
+    message: 'The end date must be after the start date',
     path: ['endDate'],
 });
 
 export type UpdateRaffleInput = z.infer<typeof updateRaffleSchema>;
 
 export const getRaffleByIdSchema = z.object({
-    id: z.string().uuid('ID raffle invalide'),
+    id: z.string().uuid('Invalid raffle ID'),
 });
 
 export type GetRaffleByIdInput = z.infer<typeof getRaffleByIdSchema>;
 
 export const drawWinnersSchema = z.object({
-    raffleId: z.string().uuid('ID raffle invalide'),
-    winnerCount: z.number().min(1, 'Au moins un gagnant requis').max(100, 'Maximum 100 gagnants'),
+    raffleId: z.string().uuid('Invalid raffle ID'),
+    winnerCount: z.number().min(1, 'At least one winner is required').max(100, 'Maximum 100 winners'),
 });
 
-export type DrawWinnersInput = z.infer<typeof drawWinnersSchema>;
-
-export const confirmRaffleCreationSchema = z.object({
-    raffleId: z.string().uuid('ID raffle invalide'),
-    transactionHash: z.string().regex(/^0x[a-fA-F0-9]{64}$/, 'Hash de transaction invalide (format 0x...)'),
-});
-
-export type ConfirmRaffleCreationInput = z.infer<typeof confirmRaffleCreationSchema>;
-
-export const cancelRaffleCreationSchema = z.object({
-    raffleId: z.string().uuid('ID raffle invalide'),
-});
-
-export type CancelRaffleCreationInput = z.infer<typeof cancelRaffleCreationSchema>;
-
-export const confirmWinnersDrawSchema = z.object({
-    raffleId: z.string().uuid('ID raffle invalide'),
-    transactionHash: z.string().regex(/^0x[a-fA-F0-9]{64}$/, 'Hash de transaction invalide (format 0x...)'),
-});
-
-export type ConfirmWinnersDrawInput = z.infer<typeof confirmWinnersDrawSchema>;
-
-export const cancelWinnersDrawSchema = z.object({
-    raffleId: z.string().uuid('ID raffle invalide'),
-});
-
-export type CancelWinnersDrawInput = z.infer<typeof cancelWinnersDrawSchema>; 
+export type DrawWinnersInput = z.infer<typeof drawWinnersSchema>; 

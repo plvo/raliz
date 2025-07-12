@@ -71,6 +71,7 @@ export const organizerTable = pgTable(
     logoUrl: varchar('logo_url', { length: 500 }),
     walletAddress: varchar('wallet_address', { length: 43 }).notNull().unique(),
     fanTokenAddress: varchar('fan_token_address', { length: 43 }).notNull().unique(),
+    fanTokenSymbol: varchar('fan_token_symbol', { length: 10 }).notNull(),
     isVerified: boolean('is_verified').notNull().default(false),
 
     // Competition fields

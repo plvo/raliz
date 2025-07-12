@@ -125,6 +125,8 @@ raliz/
 8. **Contact** : Récupère emails des gagnants pour distribution
 9. **Analyse Compétition** : **Review performance vs autres équipes + préparation saison suivante**
 
+⚠️ **IMPORTANT** : Les organisateurs ne peuvent PAS retirer les fonds CHZ des raffles. Seul le super admin peut le faire.
+
 ### 🏆 Nouveau Flow : Gestion des Saisons
 
 **🔧 Admin Super (Raliz) :**
@@ -133,6 +135,7 @@ raliz/
 3. **Fin de Saison** : **Calcul automatique classements + préparation airdrops**
 4. **Distribution Rewards** : **Airdrops CHZ + Mint NFT pour MVP fans**
 5. **Reset & Nouvelle Saison** : Archivage stats + initialisation nouvelle compétition
+6. **🔐 Gestion Financière** : **Seul le super admin peut retirer et redistribuer les fonds CHZ collectés**
 
 ---
 
@@ -536,6 +539,55 @@ Dashboard organisateur :
 - 💎 **Staking competitions** : Staker fan tokens pour booster équipe
 - 🎁 **Dynamic rewards** : Rewards adaptatifs selon performance saison
 - 🌍 **Cross-chain expansion** : Compétitions multi-blockchains
+
+---
+
+## 🔐 Gestion Financière - Architecture Sécurisée
+
+### �� Flux des Fonds CHZ - Système de Pool Compétitif
+
+**📥 Collecte :**
+- Les participants payent en CHZ lors de leur participation à toutes les raffles
+- Tous les fonds sont automatiquement collectés dans un **pool commun** dans le smart contract Raliz
+- Aucun organisateur ne peut accéder directement aux fonds
+
+**🏆 Classement des Équipes :**
+- Les organisateurs (équipes) sont classés par **montant total CHZ collecté** via leurs raffles
+- Seules les équipes du **TOP 3** sont éligibles pour la redistribution
+- Le classement est basé sur la performance de collecte de fonds
+
+**🔒 Sécurité :**
+- **Seul le super admin** (owner du contrat) peut retirer les fonds du pool
+- Les organisateurs ne peuvent que créer des raffles et gérer les participants
+- Transparence totale : tous les paiements sont trackés on-chain
+
+**💸 Redistribution Ciblée :**
+- Le super admin retire les fonds via `withdrawCHZ()` du pool commun
+- Les frais de plateforme (2.5%) sont automatiquement déduits
+- Les fonds restants sont redistribués aux **participants qui ont participé aux raffles du TOP 3 des équipes**
+- Seuls les participants ayant soutenu les meilleures équipes reçoivent des rewards
+
+### 🏆 Avantages de cette Architecture Compétitive
+
+**✅ Sécurité Maximum :**
+- Pas de risque de détournement par les organisateurs
+- Contrôle centralisé des flux financiers
+- Audit trail complet des transactions
+
+**✅ Transparence :**
+- Tous les paiements visibles on-chain
+- Historique immutable des participations
+- Calculs des commissions transparents
+
+**✅ Compétition Inter-Équipes :**
+- Incentive les équipes à créer des raffles attractives
+- Récompense les participants qui soutiennent les meilleures équipes
+- Crée une dynamique de compétition saine entre organisateurs
+
+**✅ Équité pour les Participants :**
+- Les supporters des meilleures équipes sont récompensés
+- Redistribution basée sur la performance collective
+- Encouragement à participer aux raffles des équipes les plus performantes
 
 ---
 
