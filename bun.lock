@@ -21,9 +21,8 @@
         "@better-fetch/fetch": "^1.1.18",
         "@dnd-kit/core": "^6.3.1",
         "@dnd-kit/sortable": "^10.0.0",
-        "@hookform/resolvers": "^5.0.1",
+        "@hookform/resolvers": "^5.1.1",
         "@radix-ui/react-slot": "^1.2.3",
-        "@repo/auth": "*",
         "@repo/db": "*",
         "@repo/ui": "*",
         "@tanstack/react-query": "^5.82.0",
@@ -46,7 +45,7 @@
         "react-day-picker": "^9.6.7",
         "react-dom": "^19.0.0",
         "react-error-boundary": "^6.0.0",
-        "react-hook-form": "^7.56.1",
+        "react-hook-form": "^7.60.0",
         "shext": "0.2.2",
         "sonner": "^2.0.3",
         "wagmi": "^2.15.6",
@@ -105,15 +104,6 @@
         "@types/react": "^19",
         "@types/react-dom": "^19",
         "typescript": "5.8.3",
-      },
-    },
-    "packages/auth": {
-      "name": "@repo/auth",
-      "version": "0.0.0",
-      "dependencies": {
-        "@repo/db": "*",
-        "better-auth": "^1.2.10",
-        "zod": "^4.0.0",
       },
     },
     "packages/config": {
@@ -895,8 +885,6 @@
     "@reown/appkit-utils": ["@reown/appkit-utils@1.7.8", "", { "dependencies": { "@reown/appkit-common": "1.7.8", "@reown/appkit-controllers": "1.7.8", "@reown/appkit-polyfills": "1.7.8", "@reown/appkit-wallet": "1.7.8", "@walletconnect/logger": "2.1.2", "@walletconnect/universal-provider": "2.21.0", "valtio": "1.13.2", "viem": ">=2.29.0" } }, "sha512-8X7UvmE8GiaoitCwNoB86pttHgQtzy4ryHZM9kQpvjQ0ULpiER44t1qpVLXNM4X35O0v18W0Dk60DnYRMH2WRw=="],
 
     "@reown/appkit-wallet": ["@reown/appkit-wallet@1.7.8", "", { "dependencies": { "@reown/appkit-common": "1.7.8", "@reown/appkit-polyfills": "1.7.8", "@walletconnect/logger": "2.1.2", "zod": "3.22.4" } }, "sha512-kspz32EwHIOT/eg/ZQbFPxgXq0B/olDOj3YMu7gvLEFz4xyOFd/wgzxxAXkp5LbG4Cp++s/elh79rVNmVFdB9A=="],
-
-    "@repo/auth": ["@repo/auth@workspace:packages/auth"],
 
     "@repo/config": ["@repo/config@workspace:packages/config"],
 

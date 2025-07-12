@@ -13,6 +13,7 @@ import type { Web3AuthContextConfig } from '@web3auth/modal/react';
 import { WagmiProvider } from '@web3auth/modal/react/wagmi';
 import { ThemeProvider as NextThemesProvider } from 'next-themes';
 import { CHILIZ_SPICY_TESTNET } from '@/lib/web3-config';
+import { UserProvider } from './providers/user-provider';
 
 const web3AuthOptions: Web3AuthOptions = {
   // biome-ignore lint/style/noNonNullAssertion: <explanation>
@@ -46,15 +47,21 @@ const web3AuthOptions: Web3AuthOptions = {
         label: 'MetaMask',
         showOnModal: true,
       },
-      // Désactiver les autres connecteurs
+
+      // Connecteur MetaMask - ACTIVÉ
       [EVM_CONNECTORS.WALLET_CONNECT_V2]: {
-        label: 'WalletConnect',
-        showOnModal: false,
+        label: 'Rabby',
+        showOnModal: true,
       },
-      [EVM_CONNECTORS.COINBASE]: {
-        label: 'Coinbase',
-        showOnModal: false,
-      },
+      // Désactiver les autres connecteurs
+      // [EVM_CONNECTORS.WALLET_CONNECT_V2]: {
+      //   label: 'WalletConnect',
+      //   showOnModal: false,
+      // },
+      // [EVM_CONNECTORS.COINBASE]: {
+      //   label: 'Coinbase',
+      //   showOnModal: false,
+      // },
     },
   },
 };
@@ -85,7 +92,9 @@ export function Providers({ children, web3authInitialState, ...props }: Provider
     <Web3AuthProvider config={web3AuthContextConfig} initialState={web3authInitialState}>
       <QueryClientProvider client={queryClient}>
         <WagmiProvider>
-          <NextThemesProvider {...props}>{children}</NextThemesProvider>
+          <UserProvider>
+            <NextThemesProvider {...props}>{children}</NextThemesProvider>
+          </UserProvider>
         </WagmiProvider>
       </QueryClientProvider>
     </Web3AuthProvider>
