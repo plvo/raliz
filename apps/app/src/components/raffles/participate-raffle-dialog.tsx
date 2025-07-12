@@ -68,6 +68,8 @@ export function ParticipateRaffleDialog({ raffle, open, onOpenChange, onSuccess 
       const contract = createRalizContract(contractAddress, provider);
       const result = await contract.isEligibleToParticipate(tempRaffleId, walletAddress);
 
+      console.log('result', result);
+
       setEligibility({
         eligible: result[0],
         userBalance: result[1],
@@ -216,6 +218,19 @@ export function ParticipateRaffleDialog({ raffle, open, onOpenChange, onSuccess 
           </DialogTitle>
           <DialogDescription>Review the details and confirm your participation</DialogDescription>
         </DialogHeader>
+
+        <pre>
+          {JSON.stringify(
+            {
+              eligibility: eligibility?.eligible,
+              userBalance: eligibility?.userBalance.toString(),
+              required: eligibility?.required.toString(),
+              reason: eligibility?.reason,
+            },
+            null,
+            2,
+          )}
+        </pre>
 
         <div className='space-y-4'>
           {/* Raffle Details */}
