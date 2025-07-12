@@ -4,6 +4,8 @@ import { withAction } from '@/lib/wrappers/with-action';
 import { updateRaffleSchema, type UpdateRaffleInput } from '@/schemas/raffle';
 import { raffleTable, organizerTable, type Raffle } from '@repo/db';
 import { desc, eq } from '@repo/db';
+import { getUsersByAddresses } from '../user/get';
+import { createWinners } from '../winner/create';
 
 /**
  * Met à jour une raffle existante
@@ -142,3 +144,54 @@ export async function updateRaffleStatus(raffleId: string, status: 'DRAFT' | 'AC
         return updatedRaffles[0];
     }); // Auth ouverte pour le moment
 } 
+
+/**
+ * Update the raffle after draw
+ */
+export async function updateRaffleAfterDraw(raffleId: string, winnerAddresses: string[]){
+    return withAction<Raffle>(async (db) => {
+        // Get participants from their wallet addresses
+        const participants = await getUsersByAddresses(winnerAddresses);
+        if (!participants.ok) {
+            throw new Error('Error getting participants');
+        }
+        if (participants.data.length !== winnerAddresses.length) {
+            throw new Error('Some participants not found');
+        }
+
+        // Get the raffle
+        const raffle = await db.select().from(raffleTable).where(eq(raffleTable.id, raffleId)).limit(1);
+        if (raffle.length === 0) {
+            throw new Error('Raffle not found');
+        }
+
+        const raffleData = raffle[0];
+
+        // Create winners
+        const winners = participants.data.map((participant, index) => ({
+            id: crypto.randomUUID(),
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            contactedAt: null,
+            contactNotes: null,
+            winnerRank: (index + 1).toString(),
+            hasBeenContacted: false,
+            drawnAt: new Date(),
+            participationId: participant.id,
+            raffleId,
+            userId: participant.id,
+        }));
+        const winnersCreation = await createWinners(winners);
+        if (!winnersCreation.ok) {
+            throw new Error('Error creating winners');
+        }
+
+        // Update the raffle status to ENDED and set the winners set the winners
+        await db.update(raffleTable).set({
+            status: 'ENDED',
+            updatedAt: new Date(),
+        }).where(eq(raffleTable.id, raffleId));
+
+        return await db.select().from(raffleTable).where(eq(raffleTable.id, raffleId)).limit(1).then(raffle => raffle[0]);
+    })
+}

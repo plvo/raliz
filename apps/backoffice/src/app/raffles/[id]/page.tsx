@@ -20,6 +20,8 @@ import { getRaffleById, getRaffleParticipants } from '@/actions/raffle/get';
 import { notFound } from 'next/navigation';
 import { format } from 'date-fns';
 import type { Metadata } from 'next';
+import { DrawModal } from '@/components/raffles/draw/draw-modal';
+import { revalidatePath } from 'next/cache';
 
 interface RaffleDetailPageProps {
     params: Promise<{ id: string }>;
@@ -122,10 +124,9 @@ export default async function RaffleDetailPage({ params }: RaffleDetailPageProps
                         </Button>
                     )}
                     {isEnded && winnersCount === 0 && (
-                        <Button size="sm">
-                            <Award className="w-4 h-4 mr-2" />
-                            Draw Winners
-                        </Button>
+                        <DrawModal raffle={raffle} successCallback={(raffle) => {
+                            revalidatePath(`/raffles/${raffle.id}`);
+                        }} />
                     )}
                 </div>
             </div>
