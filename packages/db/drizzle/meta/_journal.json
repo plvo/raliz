@@ -22,6 +22,13 @@
       "when": 1752272693406,
       "tag": "0002_bright_onslaught",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1752319841616,
+      "tag": "0003_chemical_mockingbird",
+      "breakpoints": true
     }
   ]
 }

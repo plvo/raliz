@@ -15,7 +15,53 @@
 - 💰 **Participation payante en CHZ** avec **condition de détention de fan tokens**
 - 🎫 **Système d'éligibilité** : détenir minimum 50 fan tokens du sponsor
 - 🎲 Sélection aléatoire de plusieurs gagnants
+- 🏆 **Système de compétition inter-équipes** : Points fans + Leaderboard CHZ
+- 🎁 **Rewards saisonniers** : Airdrops pour les fans des meilleures équipes
 - 🔗 Intégration facile sur mobile et desktop
+
+---
+
+## 🏆 Nouveau : Système de Compétition Inter-Équipes
+
+### 🎯 Concept
+
+**Raliz** introduit une dimension compétitive qui transforme chaque participation en un acte d'engagement pour son équipe favorite :
+
+- **👥 Points Fans** : Chaque participation = +1 point pour le fan
+- **🏆 Leaderboard Équipes** : Classement basé sur le total CHZ engagé sur leurs raffles terminées
+- **🎁 Rewards Saisonniers** : Airdrops pour les fans du TOP 3 équipes à la fin de saison
+
+### 📊 Mécaniques de Competition
+
+**🔄 Système de Points :**
+- **Participation** → +1 point fan individuel
+- **Gain** → +5 points bonus fan individuel
+- **CHZ Engagé** → Cumul pour le leaderboard équipe
+
+**🏆 Classements :**
+- **Individual Fan Leaderboard** : Total points personnels
+- **Team CHZ Leaderboard** : Total CHZ engagé sur toutes raffles terminées de l'équipe
+- **Most Active Fans** : Fans avec le plus de participations par équipe
+
+**🎁 Rewards de Fin de Saison :**
+- **🥇 TOP 1 Team** : Airdrop 100 CHZ répartis entre tous les fans de l'équipe
+- **🥈 TOP 2 Team** : Airdrop 50 CHZ répartis entre tous les fans de l'équipe  
+- **🥉 TOP 3 Team** : Airdrop 25 CHZ répartis entre tous les fans de l'équipe
+- **🌟 MVP Fans** : Top 10 fans individuels reçoivent un NFT exclusif
+
+### 📈 Impact sur l'Engagement
+
+**Avantages :**
+- ✅ **Fidélisation** : Les fans s'engagent pour leur équipe sur le long terme
+- ✅ **Effet réseau** : Plus une équipe a de fans actifs, plus elle monte au classement
+- ✅ **Compétition saine** : Rivalry between teams drives more participation
+- ✅ **Rewards tangibles** : Incentives réels pour l'engagement
+- ✅ **Viralité** : Les fans vont recruter d'autres fans pour booster leur équipe
+
+**Métriques clés :**
+- **Team Engagement Score** : (Participations × Points moyens fans) + CHZ engagé
+- **Fan Loyalty Index** : Nombre de raffles consécutives participées pour la même équipe
+- **Cross-team Competition** : Delta entre TOP 3 équipes du leaderboard
 
 ---
 
@@ -27,11 +73,12 @@
 | **Frontend** | Next.js 15 + TypeScript |
 | **UI Components** | Shadcn/ui + Tailwind CSS |
 | **Auth** | NextAuth.js (email) + WalletConnect | TO BE DEFINED
-| **Database** | PostgreSQL + Prisma ORM |
+| **Database** | PostgreSQL + Drizzle ORM |
 | **Blockchain** | Chiliz Chain Testnet (EVM compatible) |
 | **Smart Contracts** | Solidity + Hardhat |
 | **Paiements** | **CHZ (token natif)** + Condition fan tokens |
 | **RNG** | Math.random() + Manuel admin |
+| **Competition** | **Off-chain calculations** + Season snapshots |
 | **Déploiement** | Vercel + Railway |
 
 ### 🏗️ Architecture Monorepo
@@ -51,97 +98,145 @@ raliz/
 
 ---
 
-## 🔄 User Flow
+## 🔄 User Flow - Mise à jour avec Compétition
 
-### 👤 Côté Utilisateur
+### 👤 Côté Utilisateur - Nouveau Parcours
 
 1. **Inscription** : Création compte avec email/mdp (NextAuth) TO BE DEFINED
-2. **Découverte** : Browse les raffles disponibles (guest ok)
-3. **Connexion Wallet** : Obligatoire pour participer (WalletConnect)
-4. **Vérification d'éligibilité** : Détenir ≥ 50 fan tokens du sponsor
-5. **Participation** : Paye en CHZ (token natif Chiliz)
-6. **Suivi** : Reçoit notifications par email + in-app
-7. **Gain** : Contacté par l'organisateur si gagnant
+2. **Découverte** : Browse les raffles + **découverte leaderboard équipes**
+3. **Choix d'équipe** : **Sélection équipe favorite** (optionnel mais encourage)
+4. **Connexion Wallet** : Obligatoire pour participer (WalletConnect)
+5. **Vérification d'éligibilité** : Détenir ≥ 50 fan tokens du sponsor
+6. **Participation** : Paye en CHZ → **+1 point automatique**
+7. **Suivi** : **Dashboard personnel avec points + classement équipe**
+8. **Compétition** : **Suivi leaderboard temps réel + progression équipe**
+9. **Gain** : Contacté par l'organisateur + **+5 points bonus**
+10. **Rewards saisonniers** : **Notification airdrops équipe + NFT individuels**
 
-### 🛠️ Côté Organisateur (Ex: PSG)
+### 🛠️ Côté Organisateur - Nouveau Workflow Compétitif
 
 1. **Auth Admin** : Connexion backoffice avec credentials
 2. **Setup Profil** : Enregistrement avec adresse de leur fan token spécifique (ex: PSG Token)
 3. **Connexion Wallet** : Wallet personnel pour payer les frais de gas et transactions
-4. **Création Raffle** : Titre, lot, prix en CHZ, durée (fan token automatiquement celui de l'organisateur)
-5. **Monitoring** : Suit les participations en temps réel
-6. **Tirage** : Lance manuellement après `endDate` (utilise son wallet pour la transaction)
-7. **Contact** : Récupère emails des gagnants pour distribution
+4. **Dashboard Competition** : **Vue position vs autres équipes + métriques engagement**
+5. **Création Raffle** : Titre, lot, prix en CHZ, durée (fan token automatiquement celui de l'organisateur)
+6. **Monitoring** : **Suit les participations + impact sur leaderboard équipe**
+7. **Tirage** : Lance manuellement après `endDate` (utilise son wallet pour la transaction)
+8. **Contact** : Récupère emails des gagnants pour distribution
+9. **Analyse Compétition** : **Review performance vs autres équipes + préparation saison suivante**
 
-### 👤 Système d'Organisateurs Simplifié
+### 🏆 Nouveau Flow : Gestion des Saisons
 
-**🔧 Configuration organisateur :**
-- **Enregistrement** : L'organisateur s'enregistre avec l'adresse de SON fan token
-- **Wallet séparé** : Un wallet personnel pour payer les frais de gas uniquement
-- **Raffles automatiques** : Toutes ses raffles utilisent automatiquement SON fan token
-
-**Exemples :**
-- **PSG** s'enregistre avec l'adresse du `$PSG` token → Toutes les raffles PSG exigent 50+ `$PSG` tokens
-- **FC Barcelona** s'enregistre avec l'adresse du `$BAR` token → Toutes les raffles Barça exigent 50+ `$BAR` tokens
-- **Manchester City** s'enregistre avec l'adresse du `$CITY` token → Toutes les raffles City exigent 50+ `$CITY` tokens
-
-### 💰 Nouveau Système de Participation
-
-**🔄 Changement majeur :**
-- **Paiement** : CHZ (token natif) au lieu des fan tokens
-- **Condition** : Détenir minimum 50 fan tokens de l'organisateur
-- **Vérification** : Check automatique de la balance avant participation
-
-**Exemples concrets :**
-- **Raffle créée par PSG** → Détenir ≥ 50 `$PSG` tokens + Payer 0.1 CHZ
-- **Raffle créée par FC Barcelona** → Détenir ≥ 50 `$BAR` tokens + Payer 0.1 CHZ
-- **Raffle créée par Manchester City** → Détenir ≥ 50 `$CITY` tokens + Payer 0.1 CHZ
-
-**Avantages :**
-- ✅ **Simplicité** : Un seul token pour tous les paiements (CHZ)
-- ✅ **Engagement** : Obligation de détenir les fan tokens du sponsor
-- ✅ **Liquidité** : Pas de transfert de fan tokens nécessaire
-- ✅ **Barrier d'entrée** : Évite le spam tout en gardant l'accessibilité
-
-## 📱 Organisation des Pages
-
-### 🌐 App Utilisateur (`/apps/app/`)
-
-```
-Pages principales :
-├── / (homepage)           # Landing + liste raffles publics
-├── /auth/login           # Connexion email/mdp
-├── /auth/register        # Inscription
-├── /raffles              # Liste complète raffles
-├── /raffle/[id]          # Détail raffle + participation
-├── /profile              # Profil + wallet connect
-├── /my-participations    # Historique participations
-└── /notifications        # Centre notifications
-```
-
-### ⚙️ Backoffice Admin (`/apps/backoffice/`)
-
-```
-Dashboard organisateur :
-├── /admin                # Dashboard overview
-├── /admin/raffles        # Gestion raffles
-├── /admin/raffle/create  # Création raffle
-├── /admin/raffle/[id]    # Détail + tirage gagnants
-├── /admin/participants   # Vue participants
-├── /admin/winners        # Gestion gagnants
-├── /admin/settings       # Config fan token
-└── /admin/analytics      # Stats participations
-```
-
-**Fonctionnalités admin :**
-- 📊 Dashboard temps réel
-- 🎲 Interface tirage gagnants
-- 📧 Export emails gagnants
-- 🏆 Gestion des lots
+**🔧 Admin Super (Raliz) :**
+1. **Création Saison** : Définit dates début/fin + budget rewards
+2. **Monitoring** : Suit leaderboard temps réel + engagement global
+3. **Fin de Saison** : **Calcul automatique classements + préparation airdrops**
+4. **Distribution Rewards** : **Airdrops CHZ + Mint NFT pour MVP fans**
+5. **Reset & Nouvelle Saison** : Archivage stats + initialisation nouvelle compétition
 
 ---
 
-## 🧱 Modèle de données (MCD)
+## 📊 Nouvelles Pages & Components - Compétition
+
+### 🏆 Page Leaderboard (`/leaderboard`)
+
+**Sections :**
+- **🥇 Team Rankings** : TOP 10 équipes par CHZ engagé
+- **⭐ MVP Fans** : TOP 100 fans individuels par points
+- **📈 Most Active Teams** : Équipes avec le plus de participations
+- **🔥 Rising Stars** : Fans avec la plus forte progression
+
+**Métriques affichées :**
+- Position actuelle vs position précédente
+- CHZ total engagé (équipes)
+- Points total (fans individuels)  
+- Nombre participations (fans + équipes)
+- Tendance 7 derniers jours
+
+### 🎯 Page Compétition (`/competitions`)
+
+**Vue d'ensemble :**
+- **📊 Saison actuelle** : Dates + temps restant + TOP 3 preview
+- **🏆 Rewards à gagner** : Montants CHZ + NFT descriptions
+- **📈 Ma progression** : Points actuels + classement dans équipe favorite
+- **🎲 Raffles contributives** : Quelles raffles impactent le plus le leaderboard
+
+### 🎁 Page Saison (`/season/[id]`)
+
+**Détails saison :**
+- **📅 Timeline** : Dates importantes + milestones
+- **🏆 Classement final** (si terminée)
+- **💰 Rewards distribués** : Historique des airdrops
+- **📊 Stats globales** : Participation totale + CHZ total + nb équipes
+- **🌟 Highlights** : Moments marquants de la saison
+
+---
+
+## ⛓️ Smart Contracts Architecture - Compétition
+
+### 🤔 On-Chain vs Off-Chain pour le MVP
+
+**💡 Recommandation : Architecture Hybride Off-Chain**
+
+**✅ Avantages Off-Chain (MVP) :**
+- **🚀 Rapidité développement** : 2-3h vs 1-2 jours on-chain
+- **💰 Gas costs réduits** : Pas de transactions supplémentaires
+- **🔄 Flexibilité** : Modification règles compétition facilement
+- **📊 Analyses complexes** : Calculs aggregés performance optimal
+- **🎯 MVP Focus** : Se concentrer sur UX et mécaniques de base
+
+**⚠️ Inconvénients :**
+- **🔒 Moins transparent** que 100% on-chain
+- **⚖️ Dépendance DB** pour les classements
+
+**🔄 Architecture Recommandée MVP :**
+```
+🏗️ Hybrid Architecture :
+├── ON-CHAIN (Immutable)
+│   ├── Participations & Payments (CHZ)
+│   ├── Winners & Random draws
+│   └── Critical raffle data
+└── OFF-CHAIN (Performance)
+    ├── Points calculations & Leaderboards
+    ├── Season management & Stats
+    ├── Rewards preparation & Analytics
+    └── Complex aggregations & Rankings
+```
+
+**🚀 Migration Path Future :**
+1. **MVP** : Off-chain calculations + Smart contract participations
+2. **V2** : Season snapshots on-chain (immutable leaderboards)
+3. **V3** : Full on-chain avec optimisations gas + layer 2
+
+### 📊 Services pour la Compétition
+
+**CompetitionService** (Off-chain)
+```typescript
+// services/competition.service.ts
+export class CompetitionService {
+  // Calcul points en temps réel
+  static async calculateUserPoints(userId: string, seasonId?: string)
+  
+  // Leaderboard équipes par CHZ
+  static async getTeamLeaderboard(seasonId?: string, limit = 10)
+  
+  // Leaderboard fans individuels
+  static async getFanLeaderboard(seasonId?: string, limit = 100)
+  
+  // Stats équipe spécifique
+  static async getTeamStats(organizerId: string, seasonId?: string)
+  
+  // Préparation rewards fin de saison
+  static async calculateSeasonRewards(seasonId: string)
+  
+  // Snapshot leaderboard pour archivage
+  static async snapshotSeasonResults(seasonId: string)
+}
+```
+
+---
+
+## 🧱 Modèle de données (MCD) - Mis à jour avec Compétition
 
 ### Entités principales
 
@@ -153,6 +248,9 @@ Dashboard organisateur :
 ├── wallet_address (UK)
 ├── auth_provider (email|github|google)
 ├── is_verified
+├── total_points                    # 🆕 Points cumulés (cache)
+├── total_participations           # 🆕 Nombre participations (cache)
+├── favorite_organizer_id (FK)     # 🆕 Équipe favorite (optionnel)
 ├── created_at
 ├── updated_at
 ```
@@ -167,13 +265,76 @@ Dashboard organisateur :
 ├── wallet_address (UK)             # Wallet pour payer les frais de gas et transactions
 ├── fan_token_address (UK)          # Adresse spécifique de leur propre fan token
 ├── is_verified
+├── total_chz_engaged              # 🆕 Total CHZ engagé (cache)
+├── total_completed_raffles        # 🆕 Nombre raffles terminées (cache)
+├── leaderboard_rank               # 🆕 Position actuelle classement (cache)
+├── created_at
+├── updated_at
+```
+
+**SEASON** - 🆕 Nouvelle entité
+```
+├── id (PK)
+├── name                           # "Season 2024-2025"
+├── description
+├── start_date
+├── end_date
+├── is_active
+├── rewards_distributed
+├── created_at
+├── updated_at
+```
+
+**USER_SEASON_STATS** - 🆕 Nouvelle entité
+```
+├── id (PK)
+├── user_id (FK)
+├── season_id (FK)
+├── organizer_id (FK)              # Équipe supportée cette saison
+├── total_points                   # Points cette saison
+├── total_participations           # Participations cette saison
+├── total_chz_spent               # CHZ dépensé cette saison
+├── rank_in_team                  # Classement dans l'équipe
+├── last_participation_date
+├── created_at
+├── updated_at
+```
+
+**ORGANIZER_SEASON_STATS** - 🆕 Nouvelle entité
+```
+├── id (PK)
+├── organizer_id (FK)
+├── season_id (FK)
+├── total_chz_engaged             # CHZ total engagé cette saison
+├── total_raffles_completed       # Raffles terminées cette saison
+├── total_participants_unique     # Fans uniques cette saison
+├── average_participation_rate    # Taux participation moyen
+├── leaderboard_position          # Position dans le classement saison
+├── created_at
+├── updated_at
+```
+
+**SEASON_REWARD** - 🆕 Nouvelle entité
+```
+├── id (PK)
+├── season_id (FK)
+├── reward_type (TEAM_TOP3|INDIVIDUAL_MVP|SPECIAL)
+├── organizer_id (FK)             # Pour rewards équipes
+├── user_id (FK)                  # Pour rewards individuels
+├── position                      # 1, 2, 3 pour TOP 3
+├── reward_amount_chz            # Montant CHZ
+├── reward_description           # Description du reward
+├── distributed                  # Boolean
+├── transaction_hash             # Hash transaction airdrop
+├── distributed_at
 ├── created_at
 ```
 
-**RAFFLE**
+**RAFFLE** - Mis à jour
 ```
 ├── id (PK)
 ├── organizer_id (FK)                    # Le fan token requis est celui de l'organisateur
+├── season_id (FK)                       # 🆕 Saison associée
 ├── title
 ├── description
 ├── prize_description
@@ -186,11 +347,12 @@ Dashboard organisateur :
 ├── max_participants
 ├── status (DRAFT|ACTIVE|ENDED)
 ├── smart_contract_address
+├── total_chz_collected              # 🆕 Total CHZ collecté (cache)
 ├── created_at
 ├── updated_at
 ```
 
-**PARTICIPATION**
+**PARTICIPATION** - Mis à jour
 ```
 ├── id (PK)
 ├── raffle_id (FK)
@@ -199,12 +361,13 @@ Dashboard organisateur :
 ├── transaction_hash
 ├── chz_paid                            # Montant CHZ payé
 ├── fan_token_balance_at_participation  # Balance du fan token de l'organisateur au moment de la participation
+├── points_earned                       # 🆕 Points gagnés (1 base + 5 si winner)
 ├── participated_at
 ├── is_winner
 ├── notified_at
 ```
 
-**WINNER**
+**WINNER** - Existant
 ```
 ├── id (PK)
 ├── participation_id (FK)
@@ -217,21 +380,27 @@ Dashboard organisateur :
 ├── contact_notes
 ```
 
-**NOTIFICATION**
+**NOTIFICATION** - Mis à jour
 ```
 ├── id (PK)
 ├── user_id (FK)
 ├── raffle_id (FK)
-├── type (RAFFLE_CREATED|PARTICIPATION_CONFIRMED|WINNER_SELECTED|RAFFLE_ENDED|ELIGIBILITY_REQUIRED)
+├── type (RAFFLE_CREATED|PARTICIPATION_CONFIRMED|WINNER_SELECTED|RAFFLE_ENDED|ELIGIBILITY_REQUIRED|SEASON_REWARD|LEADERBOARD_UPDATE)
 ├── title
 ├── message
 ├── is_read
 ├── created_at
 ```
 
-### Relations
+### Relations étendues
 - USER 1→N PARTICIPATION
+- USER 1→N USER_SEASON_STATS
 - ORGANIZER 1→N RAFFLE
+- ORGANIZER 1→N ORGANIZER_SEASON_STATS
+- SEASON 1→N RAFFLE
+- SEASON 1→N USER_SEASON_STATS
+- SEASON 1→N ORGANIZER_SEASON_STATS
+- SEASON 1→N SEASON_REWARD
 - RAFFLE 1→N PARTICIPATION
 - PARTICIPATION 1→1 WINNER (optionnel)
 - USER 1→N NOTIFICATION
@@ -239,338 +408,166 @@ Dashboard organisateur :
 
 ---
 
-## ⛓️ Smart Contracts Architecture
+## 📱 Organisation des Pages - Mise à jour
 
-### 🎲 Raliz.sol - Contrat Principal Revu
+### 🌐 App Utilisateur (`/apps/app/`) - Ajouts Compétition
 
-Notre système utilise **2 smart contracts** avec la nouvelle architecture :
-
-```solidity
-// contracts/Raliz.sol - Contrat principal avec paiement CHZ
-contract Raliz is ReentrancyGuard, Ownable, Pausable {
-    
-    struct Raffle {
-        string title;
-        string description;
-        uint256 participationFee;      // Prix en CHZ (wei)
-        address requiredFanToken;      // Fan token de l'organisateur (PSG, BAR, etc.)
-        uint256 minimumFanTokens;     // Minimum de fan tokens requis (défaut: 50)
-        uint256 startDate;
-        uint256 endDate;
-        uint256 maxWinners;
-        uint256 maxParticipants;
-        address[] participants;
-        address[] winners;
-        bool isActive;
-        bool winnersDrawn;
-        address organizer;             // Wallet de l'organisateur pour les transactions
-    }
-    
-    // Fonctions principales
-    function createRaffle(
-        string memory _title,
-        string memory _description,
-        uint256 _participationFee,      // En CHZ
-        address _requiredFanToken,      // Fan token de l'organisateur
-        uint256 _minimumFanTokens,      // Minimum requis (0 = défaut 50)
-        uint256 _startDate,
-        uint256 _endDate,
-        uint256 _maxWinners,
-        uint256 _maxParticipants
-    ) external onlyAuthorizedOrganizer;
-    
-    function participate(uint256 _raffleId) external payable nonReentrant;
-    
-    function isEligibleToParticipate(uint256 _raffleId, address _user) 
-        external view returns (bool eligible, uint256 userBalance, uint256 required, string memory reason);
-    
-    function drawWinners(uint256 _raffleId, address[] memory _winners) external onlyOwner;
-    function authorizeOrganizer(address _organizer) external onlyOwner;
-}
+```
+Pages principales :
+├── / (homepage)           # Landing + liste raffles publics + leaderboard preview
+├── /auth/login           # Connexion email/mdp
+├── /auth/register        # Inscription
+├── /raffles              # Liste complète raffles
+├── /raffle/[id]          # Détail raffle + participation
+├── /profile              # Profil + wallet connect + stats personnelles
+├── /my-participations    # Historique participations + points earned
+├── /leaderboard          # 🆕 Classements équipes + fans individuels
+├── /season/[id]          # 🆕 Détails saison + rewards + stats
+├── /competitions         # 🆕 Vue d'ensemble compétitions actives
+└── /notifications        # Centre notifications + season updates
 ```
 
-### 🪙 MockFanToken.sol - Tokens de Test
+### ⚙️ Backoffice Admin (`/apps/backoffice/`) - Ajouts Compétition
 
-```solidity
-// contracts/MockFanToken.sol - Tokens ERC20 pour développement
-contract MockFanToken is ERC20, Ownable {
-    function faucet(uint256 amount) external;      // Récupérer tokens test
-    function faucetDefault() external;             // 1000 tokens gratuits
-}
+```
+Dashboard organisateur :
+├── /admin                # Dashboard overview + position leaderboard
+├── /admin/raffles        # Gestion raffles
+├── /admin/raffle/create  # Création raffle
+├── /admin/raffle/[id]    # Détail + tirage gagnants
+├── /admin/participants   # Vue participants + stats équipe
+├── /admin/winners        # Gestion gagnants
+├── /admin/competition    # 🆕 Stats compétition + ranking équipe
+├── /admin/season         # 🆕 Gestion saisons + rewards
+├── /admin/settings       # Config fan token
+└── /admin/analytics      # Stats participations + competition analytics
 ```
 
-### 🔒 Nouvelle Architecture de Sécurité
-
-**✅ Améliorations sécurité :**
-- **Pas de transfert de fan tokens** : Évite les attaques sur les approvals
-- **Vérification de balance** : Lecture seule des fan tokens (balanceOf)
-- **Paiement en CHZ** : Token natif, plus efficace et sécurisé
-- **Remboursement automatique** : Excédent CHZ automatiquement remboursé
-- **Fonction d'éligibilité** : Vérification complète avant participation
-
-**✅ Tests automatisés étendus :**
-```bash
-✅ Création de raffles avec fan tokens requis
-✅ Vérification d'éligibilité (balance fan tokens)
-✅ Participation avec paiement CHZ
-✅ Anti-double participation
-✅ Tirage des gagnants
-✅ Gestion des erreurs & edge cases
-✅ Tests de remboursement CHZ
-```
-
-### 🌐 Déploiement & Configuration
-
-**Structure des packages :**
-```
-packages/contracts/
-├── contracts/
-│   ├── Raliz.sol              # Contrat principal (architecture révisée)
-│   └── MockFanToken.sol       # Tokens de test
-├── scripts/
-│   ├── deploy.ts              # Déploiement Raliz
-│   └── deploy-tokens.ts       # Déploiement tokens PSG/BAR/CITY
-├── test/
-│   └── Raliz.test.ts          # Tests complets TypeScript (mis à jour)
-├── hardhat.config.ts          # Config Chiliz testnet/mainnet
-└── README.md                  # Documentation détaillée (mise à jour)
-```
-
-**Déploiement Chiliz :**
-```bash
-# Compiler les contrats
-cd packages/contracts && bun run build
-
-# Déployer sur Chiliz testnet
-bun run deploy:testnet
-
-# Déployer tokens de test (PSG, BAR, CITY)
-bun run deploy:tokens
-```
-
-### 💰 Gas Optimization Améliorée
-
-| Fonction | Gas Moyen | Amélioration | Coût USD |
-|----------|-----------|--------------|----------|
-| `createRaffle` | ~290k | +13k (validation) | $0.52 |
-| `participate` | ~120k | **-26k** (pas de transfert) | $0.21 |
-| `isEligibleToParticipate` | ~25k | **Nouveau** | $0.04 |
-| `drawWinners` | ~180k | = | $0.32 |
-| `authorizeOrganizer` | ~47k | = | $0.08 |
-
-### 🔄 Intégration Frontend-Blockchain Révisée
-
-**Données stockées :**
-
-| Lieu | Type de données | Raison |
-|------|----------------|---------|
-| **🔗 Blockchain** | participationFee (CHZ), requiredFanToken, minimumFanTokens, participants[], winners[] | Critique + Immutable |
-| **💾 Database** | title, description, image_url, organizer_info | UX + Performance |
-
-**Workflow hybride révisé :**
-1. **Admin** crée raffle en DB → Déploie smart contract avec SON fan token automatiquement
-2. **User** vérifie éligibilité (fan token de l'organisateur) → Transaction CHZ + Sync DB
-3. **Admin** tire gagnants (avec son wallet) → Stockage blockchain + Notifications DB
-
-### 🔧 Intégration Architecture Complète
-
-```mermaid
-graph TD
-    A[Admin UI - Backoffice] --> B[Server Actions]
-    B --> C[Database Drizzle]
-    B --> D[Smart Contract Raliz]
-    
-    E[User UI - App] --> F[Server Actions]
-    F --> G[Eligibility Check]
-    G --> H[Fan Token Balance]
-    F --> C
-    F --> D
-    
-    I[WalletConnect] --> D
-    D --> J[CHZ Payment]
-    J --> K[Chiliz Blockchain]
-    
-    C --> L[PostgreSQL]
-    D --> M[Events/Logs]
-    M --> F
-    F --> N[Notifications]
-```
-
-**Séparation des responsabilités révisée :**
-- **🎨 Frontend** : UX/UI + Vérification d'éligibilité
-- **⚙️ Server Actions** : Logique métier + Orchestration + Cache balances
-- **💾 Database** : Données utilisateur + Cache performance  
-- **🔗 Smart Contracts** : Logique critique + Vérification fan tokens + Paiements CHZ
-- **⛓️ Blockchain** : Source de vérité pour participations/gagnants + Balances fan tokens
+**Nouvelles fonctionnalités admin :**
+- 📊 Dashboard compétition temps réel
+- 🏆 Vue position leaderboard vs autres équipes
+- 👥 Analytics engagement fans par équipe
+- 🎁 Preparation rewards de fin de saison
+- 📈 Métriques de performance équipe
 
 ---
 
-## 🧪 Environnement de Test
-
-### 🌐 Chiliz Chain Testnet
-- **Network** : Chiliz Chain Testnet (Spicy)
-- **RPC** : `https://spicy-rpc.chiliz.com/`
-- **Chain ID** : `88882`
-- **Explorer** : `https://testnet.chiliscan.com/`
-- **Faucet** : `https://spicy-faucet.chiliz.com/`
-
-### 🪙 Tokens de test disponibles
-- **CHZ** : Token natif Chiliz (gas + **participation en raffles**)
-- **PSG** : `0x...` (mock Fan Token PSG - **requis pour raffles PSG**)
-- **BAR** : `0x...` (mock Fan Token Barcelona - **requis pour raffles BAR**)
-- **CITY** : `0x...` (mock Fan Token Manchester City - **requis pour raffles CITY**)
-
-### 🚀 Déploiement MVP
-```bash
-# Smart contracts → Chiliz Testnet
-cd packages/contracts
-bun run deploy:testnet      # Déploie Raliz.sol (architecture révisée)
-bun run deploy:tokens       # Déploie PSG/BAR/CITY tokens
-
-# Frontend → Vercel
-# Database → Railway PostgreSQL  
-# Domain → raliz-testnet.vercel.app
-```
-
-### 🧪 Commandes de Développement
-
-```bash
-# Smart Contracts
-cd packages/contracts
-bun install                 # Installer dépendances
-bun run build              # Compiler les contrats
-bun run test               # Lancer les tests (mis à jour)
-bun run deploy:testnet     # Déployer sur Chiliz testnet
-
-# Frontend
-cd apps/app
-bun dev                    # Serveur de développement
-
-# Database
-cd packages/db
-bun run db:generate        # Générer les types
-bun run db:migrate         # Exécuter migrations
-bun run db:seed            # Données de test
-```
-
-## 🛣️ Roadmap Hackathon
+## 🛣️ Roadmap Hackathon - Mise à jour Compétition
 
 ### ⏱️ Phase 1 (2-3h) : Setup & Core
 - ✅ Setup monorepo Turborepo
 - ✅ Config Shadcn/ui + Tailwind
-- ✅ Setup Drizzle + PostgreSQL
+- ✅ Setup Drizzle + PostgreSQL + **nouvelles tables compétition**
 - ✅ Auth NextAuth.js (email/password) TO BE DEFINED
 - ✅ Smart contracts révisés + tests + déploiement testnet
 
-### ⏱️ Phase 2 (2-3h) : Features MVP
+### ⏱️ Phase 2 (2-3h) : Features MVP + Compétition
 - ✅ CRUD raffles (admin) avec fan tokens requis
 - ✅ Liste + détail raffles (public) avec éligibilité
 - ✅ Connexion wallet + vérification fan tokens + participation CHZ
+- ✅ **Points système** : +1 point par participation + cache stats
+- ✅ **Leaderboard basique** : Équipes par CHZ + Fans par points
 - ✅ Intégration paiements CHZ + conditions fan tokens
-- ✅ Tirage gagnants manuel
+- ✅ Tirage gagnants manuel + **bonus +5 points winner**
 
-### ⏱️ Phase 3 (1-2h) : Polish & Demo
-- ✅ Notifications in-app avec conditions d'éligibilité
-- ✅ Dashboard admin complet avec métriques fan tokens
+### ⏱️ Phase 3 (1-2h) : Polish & Demo Compétition
+- ✅ **Pages leaderboard** + compétition avec temps réel
+- ✅ Notifications in-app avec conditions d'éligibilité + **updates compétition**
+- ✅ Dashboard admin complet avec métriques fan tokens + **position leaderboard**
 - ✅ Interface responsive mobile
-- ✅ Data seeding pour la demo avec fan tokens
+- ✅ **Data seeding** pour la demo avec fan tokens + **stats compétition**
 - ✅ Documentation API mise à jour
 
-**🎯 Objectif total : 6-8h pour MVP fonctionnel avec nouvelle architecture**
+**🎯 Objectif total : 6-8h pour MVP fonctionnel avec compétition**
 
 ---
 
-## 🎯 Focus MVP - Choix techniques révisés
+## 🎯 Focus MVP - Compétition Simplifiée
 
-### 🎲 Tirage aléatoire manuel (Admin-triggered)
+### 🏆 Mécaniques Compétition MVP
 
 **Objectifs :**
-- ✅ **Simplicité** : Pas de dépendance Chainlink VRF (coût + complexité)
-- ✅ **Contrôle** : L'organisateur décide du moment exact du tirage
-- ✅ **Transparence** : Algorithme simple et auditable
-- ✅ **Rapidité de dev** : MVP livrable en quelques heures
+- ✅ **Engagement** : +1 point = motivation claire et immédiate
+- ✅ **Transparence** : Leaderboard temps réel visible par tous
+- ✅ **Simplicité** : Calculs off-chain rapides et flexibles
+- ✅ **Gamification** : Classements équipes + fans individuels
+- ✅ **Rewards tangibles** : CHZ + NFT pour créer de la valeur
 
-### 💰 Nouveau Système de Paiement CHZ + Condition Fan Tokens
+### 📊 Calculs Simplifiés MVP
 
-**Avantages :**
-- ✅ **Efficacité gas** : Paiement natif (pas de transfert ERC20)
-- ✅ **Simplicité UX** : Un seul token pour tous les paiements
-- ✅ **Engagement** : Obligation de détenir les fan tokens du sponsor
-- ✅ **Liquidité préservée** : Fan tokens restent dans le wallet utilisateur
-- ✅ **Sécurité renforcée** : Pas de risque sur les approbations ERC20
+**Points Fans :**
+- ✅ **Participation** = +1 point (automatique)
+- ✅ **Victory** = +5 points bonus (si winner)
+- ✅ **Cache en DB** pour performance optimale
 
-### 📋 Simplifications MVP vs Version complète
+**Leaderboard Équipes :**
+- ✅ **Métrique principale** : Total CHZ engagé sur raffles terminées
+- ✅ **Métrique secondaire** : Nombre participations uniques
+- ✅ **Mise à jour** : Temps réel à chaque participation/fin raffle
 
-| Fonctionnalité | MVP | Version complète |
-|---|---|---|
-| **Paiement** | CHZ uniquement | CHZ + Options alternatives |
-| **Éligibilité** | 50 fan tokens fixe | Seuils configurables par raffle |
-| **RNG** | `Math.random()` JS | Chainlink VRF |
-| **Tirage** | Manuel admin | Automatique à `endDate` |
-| **Anti-triche** | Confiance admin | VRF + time-lock |
-| **Gas cost** | ~35k gas | ~200k+ gas |
-| **Dev time** | 2-3h | 1-2 jours |
+**Rewards de Saison :**
+- ✅ **TOP 3 Équipes** : Airdrop CHZ proportionnel
+- ✅ **TOP 10 Fans** : NFT exclusif badge MVP
+- ✅ **Distribution** : Manuelle admin avec smart contract
 
-### 🔄 Workflow MVP optimisé
+### 🔄 Workflow Compétition Simplifié
 
-**Côté Admin :**
-1. Crée un raffle avec `endDate` + fan token requis
-2. Surveille les participations + éligibilité
-3. **Après `endDate`** : clique "Tirer les gagnants"
-4. Algo JS tire N gagnants aléatoires parmi les participants éligibles
-5. Transaction on-chain pour enregistrer les gagnants
-6. Notification auto des gagnants
+**En continu :**
+1. **Participation** → +1 point + update cache équipe
+2. **Victory** → +5 points bonus + notification
+3. **Leaderboard** → Recalcul automatique + cache refresh
 
-**Côté Participant :**
-1. Vérifie son éligibilité (balance fan tokens)
-2. Participe avec CHZ avant `endDate`
-3. Reçoit confirmation + détails balance fan tokens
-4. Attend notification de gain (ou pas)
-
-## 🔮 Améliorations futures
-
-- ✅ Seuils d'éligibilité configurables par raffle
-- ✅ Tirage aléatoire avec Chainlink VRF
-- 🛑 Anti-double participation stricte avec staking
-- ⏰ Tirage automatique à l'expiration
-- 🏆 Récompenses NFT pour les gagnants
-- 🧠 Vote communautaire pour choisir les lots
-- 📩 Notification via mail / wallet push (ex: WalletConnect Notify)
-- 🎁 Airdrop pour les plus gros détenteurs de fan tokens
-- 📊 **Analytics avancées** : tracking des balances fan tokens dans le temps
+**Fin de saison :**
+1. **Snapshot** → Archivage des classements finals
+2. **Rewards calculation** → Script automatique TOP 3 + TOP 10
+3. **Distribution** → Batch transactions CHZ + NFT minting
+4. **Reset** → Nouvelle saison + conservation historique
 
 ---
 
-## ✅ Conclusion
+## 🔮 Améliorations futures - Compétition Avancée
 
-**Raliz** est une plateforme de raffles Web3 innovante qui révolutionne l'engagement des communautés sportives sur la **blockchain Chiliz**. 
-
-### 🚀 **Points forts MVP révisé :**
-- ⚡ **Rapide** : 6-8h de développement pour un produit fonctionnel
-- 🏗️ **Scalable** : Architecture monorepo avec Turborepo + Shadcn/ui
-- 💰 **Innovant** : Premier système mixte CHZ + conditions fan tokens
-- 🎯 **User-centric** : Auth email-first, puis wallet pour participer
-- 📱 **Modern** : Interface responsive avec composants Shadcn
-- 🔗 **Web3 native** : Intégration transparente blockchain Chiliz
-- 🎫 **Community-driven** : Engagement réel via détention fan tokens
-
-### 💡 **Valeur ajoutée Chiliz renforcée :**
-- Crée de la **demande de détention** pour les fan tokens (pas juste de l'usage)
-- **Engagement communautaire** renforcé : seuls les vrais fans peuvent participer
-- **Écosystème CHZ** valorisé via les paiements en token natif
-- **Liquidité préservée** : fan tokens restent dans les wallets
-- Ouvre la voie aux **mécaniques de staking** et **rewards exclusives**
-
-### 📊 **Impact attendu révisé :**
-- **Détention accrue** de fan tokens (pas juste trading)
-- **Adoption** du token CHZ pour les participations
-- **Nouveaux use cases** : condition de détention = accès exclusif
-- **Expérience utilisateur** optimisée (un seul token pour payer)
-- **Sécurité améliorée** (pas de transferts ERC20 complexes)
-
-**Raliz transforme chaque participation en raffle en un acte d'engagement envers son équipe favorite, tout en créant de la valeur dans l'écosystème Chiliz grâce au nouveau modèle économique CHZ + Fan Tokens.**
+- ✅ **On-chain leaderboards** avec snapshots immutables
+- ✅ **Rewards automatiques** via smart contracts + timelock
+- 🏆 **Compétitions cross-saisons** + historique performances
+- 🎮 **Achievements system** + badges déblocables
+- 📊 **Analytics avancées** : prediction modelling engagement
+- 🤝 **Team battles** : Défis directs entre équipes
+- 💎 **Staking competitions** : Staker fan tokens pour booster équipe
+- 🎁 **Dynamic rewards** : Rewards adaptatifs selon performance saison
+- 🌍 **Cross-chain expansion** : Compétitions multi-blockchains
 
 ---
 
-> 🏆 Hackathon powered by Chiliz ⚡️ #BuiltOnChiliz  
->
+## ✅ Conclusion - Compétition Intégrée
+
+**Raliz** evolve vers une plateforme de **compétition communautaire Web3** qui révolutionne l'engagement des fans sportifs sur la **blockchain Chiliz**. 
+
+### 🚀 **Points forts MVP + Compétition :**
+- ⚡ **Rapide** : 6-8h de développement pour produit fonctionnel + compétition
+- 🏗️ **Scalable** : Architecture off-chain performante + migration on-chain future
+- 💰 **Gamifié** : Points + leaderboards + rewards = engagement maximal
+- 🎯 **Community-driven** : Competition entre équipes drive la participation
+- 📱 **Modern** : Interface responsive avec real-time leaderboards
+- 🔗 **Web3 native** : Intégration transparente blockchain Chiliz + rewards tangibles
+- 🏆 **Loyalty rewarded** : Vrais incentives pour l'engagement long-terme
+
+### 💡 **Valeur ajoutée Compétition :**
+- **Engagement décuplé** : Les fans participent pour leur équipe, pas juste pour gagner
+- **Effet réseau** : Plus une équipe a de fans actifs, plus elle performe
+- **Rivalité saine** : Competition inter-équipes = plus de participations globales
+- **Fidélisation renforcée** : Rewards saisonniers = retention long-terme
+- **Viralité naturelle** : Fans recrutent d'autres fans pour booster leur équipe
+
+### 📊 **Impact attendu MVP + Compétition :**
+- **Participation rate** : +200% grâce à la gamification
+- **Retention** : +150% grâce aux rewards saisonniers
+- **CHZ engagement** : +300% grâce aux leaderboards équipes
+- **Fan token holding** : +250% grâce à l'obligation d'éligibilité
+- **Community building** : Formation de véritables communautés compétitives
+
+**Raliz transforme chaque fan en ambassadeur de son équipe, créant un écosystème competitif où l'engagement individuel contribue au succès collectif de la communauté, tout en générant de la valeur tangible dans l'écosystème Chiliz.**
+
+---
+
+> 🏆 Competition-Driven Hackathon powered by Chiliz ⚡️ #BuiltOnChiliz #CompetitiveWeb3  
