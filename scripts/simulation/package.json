@@ -1,0 +1,29 @@
+{
+  "name": "@raliz/seeder",
+  "version": "1.0.0",
+  "description": "Seeder de simulation pour Raliz",
+  "scripts": {
+    "seed": "bun seed-simulation.ts",
+    "seed:dev": "dotenv -e .env.local -- tsx seed-simulation.ts",
+    "verify": "tsx verify-seeding.ts",
+    "verify:dev": "dotenv -e .env.local -- tsx verify-seeding.ts",
+    "cleanup": "tsx cleanup-database.ts",
+    "cleanup:dev": "dotenv -e .env.local -- tsx cleanup-database.ts"
+  },
+  "dependencies": {
+    "@faker-js/faker": "^8.4.1",
+    "@repo/contracts": "*",
+    "@repo/db": "*",
+    "drizzle-orm": "^0.29.5",
+    "ethers": "^6.11.1",
+    "pg": "^8.11.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.24",
+    "@types/pg": "^8.11.2",
+    "@repo/config": "*",
+    "dotenv-cli": "^7.4.1",
+    "tsx": "^4.7.1",
+    "typescript": "^5.3.3"
+  }
+}

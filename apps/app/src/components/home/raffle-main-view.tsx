@@ -18,7 +18,7 @@ interface RaffleMainViewProps {
 }
 
 export function RaffleMainView({ raffles, selectedOrganizer, className }: RaffleMainViewProps) {
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
 
   const getTitle = () => {
     if (selectedOrganizer) {
@@ -36,7 +36,7 @@ export function RaffleMainView({ raffles, selectedOrganizer, className }: Raffle
 
   return (
     <div className={cn('w-full h-full', className)}>
-      <Card className='h-full bg-muted backdrop-blur-sm'>
+      <Card className='h-full bg-muted backdrop-blur-sm overflow-y-auto'>
         <CardHeader>
           <div className='flex items-center justify-between'>
             <div>
@@ -52,20 +52,20 @@ export function RaffleMainView({ raffles, selectedOrganizer, className }: Raffle
               </Badge>
               <div className='flex items-center bg-muted p-1 rounded-lg'>
                 <Button
-                  variant={viewMode === 'grid' ? 'default' : 'ghost'}
-                  size='sm'
-                  onClick={() => setViewMode('grid')}
-                  className='h-8 w-8 p-0'
-                >
-                  <Grid3X3 className='h-4 w-4' />
-                </Button>
-                <Button
                   variant={viewMode === 'list' ? 'default' : 'ghost'}
                   size='sm'
                   onClick={() => setViewMode('list')}
                   className='h-8 w-8 p-0'
                 >
                   <List className='h-4 w-4' />
+                </Button>
+                <Button
+                  variant={viewMode === 'grid' ? 'default' : 'ghost'}
+                  size='sm'
+                  onClick={() => setViewMode('grid')}
+                  className='h-8 w-8 p-0'
+                >
+                  <Grid3X3 className='h-4 w-4' />
                 </Button>
               </div>
             </div>
@@ -102,18 +102,22 @@ function RaffleDisplay({ raffles, viewMode }: RaffleDisplayProps) {
   if (viewMode === 'list') {
     return (
       <div className='space-y-4'>
-        {raffles.map((raffle) => (
-          <RaffleListItem key={raffle.id} raffle={raffle} />
-        ))}
+        {raffles
+          .sort((a, b) => new Date(b.endDate).getTime() - new Date(a.endDate).getTime())
+          .map((raffle) => (
+            <RaffleListItem key={raffle.id} raffle={raffle} />
+          ))}
       </div>
     );
   }
 
   return (
     <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-      {raffles.map((raffle) => (
-        <RaffleCard key={raffle.id} raffle={raffle} />
-      ))}
+      {raffles
+        .sort((a, b) => new Date(b.endDate).getTime() - new Date(a.endDate).getTime())
+        .map((raffle) => (
+          <RaffleCard key={raffle.id} raffle={raffle} />
+        ))}
     </div>
   );
 }
@@ -336,7 +340,6 @@ function RaffleListItem({ raffle }: RaffleItemProps) {
     >
       <CardContent className='p-6'>
         <div className='flex items-start gap-4'>
-          {/* Image */}
           <div className='relative w-24 h-24 bg-gradient-to-br from-primary/5 to-primary/10 rounded-lg overflow-hidden flex-shrink-0'>
             {raffle.imageUrl ? (
               <Image
@@ -352,7 +355,6 @@ function RaffleListItem({ raffle }: RaffleItemProps) {
             )}
           </div>
 
-          {/* Content */}
           <div className='flex-1 min-w-0'>
             <div className='flex items-start justify-between gap-2 mb-2'>
               <h3 className='font-bold text-lg leading-tight line-clamp-2 group-hover:text-primary transition-colors'>
@@ -371,33 +373,7 @@ function RaffleListItem({ raffle }: RaffleItemProps) {
 
             <p className='text-sm text-muted-foreground line-clamp-2 mb-3'>{raffle.description}</p>
 
-            <div className='grid grid-cols-2 lg:grid-cols-4 gap-4 text-sm'>
-              <div className='flex items-center gap-2'>
-                <div className='w-6 h-6 bg-green-500/10 rounded-full flex items-center justify-center'>
-                  <span className='text-xs font-bold text-green-700'>{raffle.tokenSymbol}</span>
-                </div>
-                <div>
-                  <p className='font-medium'>{formatPrice(raffle.participationPrice)}</p>
-                  <p className='text-xs text-muted-foreground'>Entry fee</p>
-                </div>
-              </div>
-
-              <div className='flex items-center gap-2'>
-                <Users className='w-4 h-4 text-muted-foreground' />
-                <div>
-                  <p className='font-medium'>{raffle.maxParticipants || '∞'}</p>
-                  <p className='text-xs text-muted-foreground'>Max participants</p>
-                </div>
-              </div>
-
-              <div className='flex items-center gap-2'>
-                <Target className='w-4 h-4 text-muted-foreground' />
-                <div>
-                  <p className='font-medium'>{raffle.maxWinners}</p>
-                  <p className='text-xs text-muted-foreground'>Winners</p>
-                </div>
-              </div>
-
+            <div className='flex items-center justify-between gap-2'>
               <div className='flex items-center gap-2'>
                 <Clock className='w-4 h-4 text-muted-foreground' />
                 <div>
@@ -405,11 +381,34 @@ function RaffleListItem({ raffle }: RaffleItemProps) {
                   <p className='text-xs text-muted-foreground'>End date</p>
                 </div>
               </div>
+              <div className='flex items-center gap-2'>
+                <Users className='w-4 h-4 text-muted-foreground' />
+                <div>
+                  <p className='font-medium'>{raffle.maxParticipants || '∞'}</p>
+                  <p className='text-xs text-muted-foreground'>Max participants</p>
+                </div>
+              </div>
+              <div className='flex items-center gap-2'>
+                <Target className='w-4 h-4 text-muted-foreground' />
+                <div>
+                  <p className='font-medium'>{raffle.maxWinners}</p>
+                  <p className='text-xs text-muted-foreground'>Winners</p>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Action */}
-          <div className='flex-shrink-0'>
+          <div className='flex-shrink-0 flex flex-col gap-8'>
+            <div className='flex items-center gap-2'>
+              <div className='w-6 h-6 bg-green-500/10 rounded-full flex items-center justify-center'>
+                <span className='text-xs font-bold text-green-700'>{raffle.tokenSymbol}</span>
+              </div>
+              <div>
+                <p className='font-medium'>{formatPrice(raffle.participationPrice)}</p>
+                <p className='text-xs text-muted-foreground'>Entry fee</p>
+              </div>
+            </div>
+
             {isActive ? (
               <Button className='bg-primary hover:bg-primary/90 text-white font-medium'>
                 <Trophy className='w-4 h-4 mr-2' />
