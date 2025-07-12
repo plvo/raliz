@@ -1,5 +1,10 @@
 'use client';
 
+import { getUserParticipationsForRaffles } from '@/actions/participation/get';
+import { ParticipateRaffleDialog } from '@/components/raffles/participate-raffle-dialog';
+import { useActionQuery } from '@/hooks/use-action';
+import { useWallet } from '@/hooks/use-wallet';
+import { useUser } from '@/lib/providers/user-provider';
 import type { OrgWithoutWallet } from '@/types/database';
 import type { Raffle } from '@repo/db';
 import { Badge } from '@repo/ui/components/badge';
@@ -17,8 +22,30 @@ interface RaffleMainViewProps {
   className?: string;
 }
 
+interface RaffleDisplayProps {
+  raffles: Raffle[];
+  viewMode: 'grid' | 'list';
+  userParticipations?: Record<string, boolean>;
+}
+
+interface RaffleItemProps {
+  raffle: Raffle;
+  hasParticipated?: boolean;
+}
+
 export function RaffleMainView({ raffles, selectedOrganizer, className }: RaffleMainViewProps) {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
+  const { user } = useUser();
+
+  // Récupérer les participations de l'utilisateur pour les raffles affichées
+  const raffleIds = raffles.map((raffle) => raffle.id);
+  const { data: userParticipations } = useActionQuery({
+    queryKey: ['user-participations', user?.id || '', ...raffleIds],
+    actionFn: () => getUserParticipationsForRaffles(user?.id || '', raffleIds),
+    queryOptions: {
+      enabled: !!user?.id && raffleIds.length > 0,
+    },
+  });
 
   const getTitle = () => {
     if (selectedOrganizer) {
@@ -72,19 +99,14 @@ export function RaffleMainView({ raffles, selectedOrganizer, className }: Raffle
           </div>
         </CardHeader>
         <CardContent>
-          <RaffleDisplay raffles={raffles} viewMode={viewMode} />
+          <RaffleDisplay raffles={raffles} viewMode={viewMode} userParticipations={userParticipations || {}} />
         </CardContent>
       </Card>
     </div>
   );
 }
 
-interface RaffleDisplayProps {
-  raffles: Raffle[];
-  viewMode: 'grid' | 'list';
-}
-
-function RaffleDisplay({ raffles, viewMode }: RaffleDisplayProps) {
+function RaffleDisplay({ raffles, viewMode, userParticipations }: RaffleDisplayProps) {
   if (raffles.length === 0) {
     return (
       <div className='flex flex-col items-center justify-center py-16 text-center'>
@@ -105,7 +127,11 @@ function RaffleDisplay({ raffles, viewMode }: RaffleDisplayProps) {
         {raffles
           .sort((a, b) => new Date(b.endDate).getTime() - new Date(a.endDate).getTime())
           .map((raffle) => (
-            <RaffleListItem key={raffle.id} raffle={raffle} />
+            <RaffleListItem
+              key={raffle.id}
+              raffle={raffle}
+              hasParticipated={userParticipations?.[raffle.id] || false}
+            />
           ))}
       </div>
     );
@@ -116,17 +142,15 @@ function RaffleDisplay({ raffles, viewMode }: RaffleDisplayProps) {
       {raffles
         .sort((a, b) => new Date(b.endDate).getTime() - new Date(a.endDate).getTime())
         .map((raffle) => (
-          <RaffleCard key={raffle.id} raffle={raffle} />
+          <RaffleCard key={raffle.id} raffle={raffle} hasParticipated={userParticipations?.[raffle.id] || false} />
         ))}
     </div>
   );
 }
 
-interface RaffleItemProps {
-  raffle: Raffle;
-}
+function RaffleCard({ raffle, hasParticipated }: RaffleItemProps) {
+  const [dialogOpen, setDialogOpen] = useState(false);
 
-function RaffleCard({ raffle }: RaffleItemProps) {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'ACTIVE':
@@ -275,10 +299,21 @@ function RaffleCard({ raffle }: RaffleItemProps) {
 
         <div className='pt-2'>
           {isActive ? (
-            <Button className='w-full bg-primary hover:bg-primary/90 text-white font-medium' size='sm'>
-              <Trophy className='w-4 h-4 mr-2' />
-              Join Raffle
-            </Button>
+            hasParticipated ? (
+              <Button variant='secondary' className='w-full' size='sm' disabled>
+                <Trophy className='w-4 h-4 mr-2' />
+                Already Joined
+              </Button>
+            ) : (
+              <Button
+                className='w-full bg-primary hover:bg-primary/90 text-white font-medium'
+                size='sm'
+                onClick={() => setDialogOpen(true)}
+              >
+                <Trophy className='w-4 h-4 mr-2' />
+                Join Raffle
+              </Button>
+            )
           ) : isEnded ? (
             <Button variant='outline' className='w-full' size='sm' disabled>
               <Trophy className='w-4 h-4 mr-2' />
@@ -292,11 +327,24 @@ function RaffleCard({ raffle }: RaffleItemProps) {
           )}
         </div>
       </CardContent>
+
+      <ParticipateRaffleDialog
+        raffle={raffle}
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onSuccess={() => {
+          // Optionally refresh data or show success message
+          console.log('Successfully joined raffle!');
+        }}
+      />
     </Card>
   );
 }
 
-function RaffleListItem({ raffle }: RaffleItemProps) {
+function RaffleListItem({ raffle, hasParticipated }: RaffleItemProps) {
+  const { walletAddress } = useWallet();
+  const [dialogOpen, setDialogOpen] = useState(false);
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'ACTIVE':
@@ -321,7 +369,7 @@ function RaffleListItem({ raffle }: RaffleItemProps) {
   };
 
   const formatPrice = (price: string) => {
-    return `${price} ${raffle.tokenSymbol}`;
+    return `${Number(price).toFixed(2)} ${raffle.tokenSymbol}`;
   };
 
   const isActive = raffle.status === 'ACTIVE';
@@ -410,10 +458,17 @@ function RaffleListItem({ raffle }: RaffleItemProps) {
             </div>
 
             {isActive ? (
-              <Button className='bg-primary hover:bg-primary/90 text-white font-medium'>
-                <Trophy className='w-4 h-4 mr-2' />
-                Join Raffle
-              </Button>
+              hasParticipated ? (
+                <Button variant='secondary' disabled>
+                  <Trophy className='w-4 h-4 mr-2' />
+                  Already Joined
+                </Button>
+              ) : (
+                <Button disabled={!walletAddress} onClick={() => setDialogOpen(true)}>
+                  <Trophy className='w-4 h-4 mr-2' />
+                  Join Raffle
+                </Button>
+              )
             ) : isEnded ? (
               <Button variant='outline' disabled>
                 <Trophy className='w-4 h-4 mr-2' />
@@ -428,6 +483,16 @@ function RaffleListItem({ raffle }: RaffleItemProps) {
           </div>
         </div>
       </CardContent>
+
+      <ParticipateRaffleDialog
+        raffle={raffle}
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onSuccess={() => {
+          // Optionally refresh data or show success message
+          console.log('Successfully joined raffle!');
+        }}
+      />
     </Card>
   );
 }

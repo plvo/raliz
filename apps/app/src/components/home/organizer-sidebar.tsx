@@ -127,7 +127,7 @@ function OrganizerCard({ organizer, isSelected, onSelect }: OrganizerCardProps) 
         <div className='flex-1 min-w-0'>
           <div className='flex items-center gap-2'>
             <h3 className='font-medium text-sm truncate'>{organizer.name}</h3>
-            {organizer.isVerified && <Verified className='h-3 w-3 text-blue-500 flex-shrink-0' />}
+            {organizer.isVerified && <Verified className='size-3 text-blue-500 flex-shrink-0' />}
           </div>
           <div className='flex items-center gap-2 mt-1'>
             <div className='flex items-center gap-1 text-xs text-muted-foreground'>
