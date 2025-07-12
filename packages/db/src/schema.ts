@@ -271,6 +271,7 @@ export const raffleTable = pgTable(
     maxParticipants: varchar('max_participants', { length: 10 }),
     status: raffleStatusEnum('status').notNull().default('DRAFT'),
     smartContractAddress: varchar('smart_contract_address', { length: 42 }),
+    contractRaffleId: integer('contract_raffle_id'), // ID de la raffle dans le smart contract
 
     // Competition fields
     totalChzCollected: decimal('total_chz_collected', { precision: 18, scale: 8 }).notNull().default('0'),
@@ -288,6 +289,7 @@ export const raffleTable = pgTable(
     index('raffles_status_idx').on(t.status),
     index('raffles_end_date_idx').on(t.endDate),
     index('raffles_total_chz_collected_idx').on(t.totalChzCollected),
+    index('raffles_contract_raffle_id_idx').on(t.contractRaffleId), // Index pour recherche rapide
   ],
 );
 

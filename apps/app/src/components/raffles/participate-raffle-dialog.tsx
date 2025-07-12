@@ -1,8 +1,10 @@
 'use client';
 
 import { createParticipation } from '@/actions/participation/create';
+import { getRaffleContractId } from '@/actions/raffle/get';
 import { useActionMutation } from '@/hooks/use-action';
 import { useUser } from '@/lib/providers/user-provider';
+import { BlockchainService } from '@repo/contracts';
 import type { Raffle } from '@repo/db';
 import { Button } from '@repo/ui/components/button';
 import { Card, CardContent } from '@repo/ui/components/card';
@@ -18,7 +20,7 @@ import { Separator } from '@repo/ui/components/separator';
 import { useWeb3Auth } from '@web3auth/modal/react';
 import { ethers } from 'ethers';
 import { AlertCircle, CheckCircle, Clock, CreditCard, Loader2, Target, Trophy, Users } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 interface ParticipateRaffleDialogProps {
   raffle: Raffle;
@@ -40,53 +42,51 @@ export function ParticipateRaffleDialog({ raffle, open, onOpenChange, onSuccess 
   const [eligibility, setEligibility] = useState<EligibilityCheck | null>(null);
   const [checkingEligibility, setCheckingEligibility] = useState(false);
 
-  // Vérifier l'éligibilité quand le dialog s'ouvre
-  useEffect(() => {
-    if (open && walletAddress) {
-      checkEligibility();
-    }
-  }, [open, walletAddress]);
+  // Créer le service blockchain avec un provider en lecture seule
+  const createBlockchainService = useCallback(async () => {
+    const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL || 'https://spicy-rpc.chiliz.com');
 
-  const checkEligibility = async () => {
-    if (!walletAddress) return;
+    // Pour les opérations de lecture, on utilise un wallet factice
+    const dummySigner = ethers.Wallet.createRandom().connect(provider);
+
+    return new BlockchainService(provider, dummySigner);
+  }, []);
+
+  const contractRaffleId = raffle.contractRaffleId;
+
+  // Vérifier l'éligibilité quand le dialog s'ouvre
+  const checkEligibility = useCallback(async () => {
+    if (!walletAddress || !contractRaffleId) return;
 
     setCheckingEligibility(true);
     try {
-      // Pour l'instant, on utilise un ID temporaire basé sur un hash de l'ID raffle
-      // Dans une vraie implémentation, il faudrait un mapping database->blockchain
-      const tempRaffleId = 0; // Temporaire - en attendant l'intégration complète
+      const blockchainService = await createBlockchainService();
 
-      // Créer un provider et utiliser directement le contrat pour récupérer toutes les infos
-      const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL || 'https://spicy-rpc.chiliz.com');
-      const { createRalizContract } = await import('@repo/contracts');
-      const contractAddress = process.env.NEXT_PUBLIC_RALIZ_CONTRACT_ADDRESS || '';
-
-      if (!contractAddress) {
-        throw new Error('Contract address not configured');
-      }
-
-      const contract = createRalizContract(contractAddress, provider);
-      const result = await contract.isEligibleToParticipate(tempRaffleId, walletAddress);
-
-      console.log('result', result);
+      const result = await blockchainService.isEligibleToParticipate(contractRaffleId, walletAddress);
 
       setEligibility({
-        eligible: result[0],
-        userBalance: result[1],
-        required: result[2],
-        reason: result[3],
+        eligible: result,
+        userBalance: 0n, // TODO: Récupérer la vraie balance
+        required: BigInt(raffle.minimumFanTokens || 0),
+        reason: result ? 'Eligible' : 'Not eligible to participate',
       });
     } catch (error) {
       console.error('Error checking eligibility:', error);
       setEligibility({
         eligible: false,
         userBalance: 0n,
-        required: 0n,
+        required: BigInt(raffle.minimumFanTokens || 0),
         reason: 'Error checking eligibility',
       });
     }
     setCheckingEligibility(false);
-  };
+  }, [walletAddress, createBlockchainService, raffle.minimumFanTokens, contractRaffleId]);
+
+  useEffect(() => {
+    if (open && walletAddress) {
+      checkEligibility();
+    }
+  }, [open, walletAddress, checkEligibility]);
 
   // Mutation pour participer à la raffle
   const { mutate: participate, isPending: isParticipating } = useActionMutation({
@@ -95,35 +95,37 @@ export function ParticipateRaffleDialog({ raffle, open, onOpenChange, onSuccess 
         throw new Error('Wallet not connected or user not found');
       }
 
-      // Créer un provider Web3Auth
+      // Récupérer l'ID du smart contract depuis la base de données
+      const contractIdResult = await getRaffleContractId(raffle.id);
+      if (!contractIdResult.ok) {
+        throw new Error('Failed to get contract raffle ID');
+      }
+
+      const contractRaffleId = contractIdResult.data.contractRaffleId;
+      if (contractRaffleId === null) {
+        throw new Error('This raffle has not been deployed to the blockchain yet');
+      }
+
+      // Créer un provider avec signer pour les transactions
       const ethersProvider = new ethers.BrowserProvider(web3Auth.provider);
       const signer = await ethersProvider.getSigner();
 
-      // Pour l'instant, on utilise un ID temporaire
-      const tempRaffleId = 0;
+      const blockchainService = new BlockchainService(
+        new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL || 'https://spicy-rpc.chiliz.com'),
+        signer,
+      );
 
-      // Utiliser directement le contrat
-      const { createRalizContract } = await import('@repo/contracts');
-      const contractAddress = process.env.NEXT_PUBLIC_RALIZ_CONTRACT_ADDRESS || '';
+      // Participer via le service blockchain
+      const tx = await blockchainService.participateInRaffle(contractRaffleId, raffle.participationPrice, signer);
 
-      if (!contractAddress) {
-        throw new Error('Contract address not configured');
-      }
-
-      const contract = createRalizContract(contractAddress, signer);
-
-      // Participer à la raffle
-      const feeWei = ethers.parseEther(raffle.participationPrice);
-      const tx = await contract.participate(tempRaffleId, { value: feeWei });
-
-      // Attendre la confirmation de la transaction
+      // Attendre la confirmation
       const receipt = await tx.wait();
 
       if (!receipt || receipt.status !== 1) {
         throw new Error('Transaction failed');
       }
 
-      // Sauvegarder la participation en base de données
+      // Sauvegarder en base de données
       const participationResult = await createParticipation({
         raffleId: raffle.id,
         userId: user.id,
@@ -139,7 +141,10 @@ export function ParticipateRaffleDialog({ raffle, open, onOpenChange, onSuccess 
 
       return {
         ok: true,
-        data: { transactionHash: receipt.hash, participationId: participationResult.data.participationId },
+        data: {
+          transactionHash: receipt.hash,
+          participationId: participationResult.data.participationId,
+        },
       };
     },
     successEvent: {
@@ -195,7 +200,7 @@ export function ParticipateRaffleDialog({ raffle, open, onOpenChange, onSuccess 
         <AlertCircle className='w-4 h-4 text-red-600' />
         <div className='flex-1'>
           <span className='text-sm text-red-800 dark:text-red-400 block'>Not eligible: {eligibility.reason}</span>
-          {eligibility.reason.includes('Insufficient fan token') && (
+          {eligibility.userBalance > 0n && eligibility.required > 0n && (
             <span className='text-xs text-red-600 dark:text-red-500'>
               You have {formatTokenAmount(eligibility.userBalance)} {raffle.tokenSymbol}, but need{' '}
               {formatTokenAmount(eligibility.required)}
@@ -219,23 +224,11 @@ export function ParticipateRaffleDialog({ raffle, open, onOpenChange, onSuccess 
           <DialogDescription>Review the details and confirm your participation</DialogDescription>
         </DialogHeader>
 
-        <pre>
-          {JSON.stringify(
-            {
-              eligibility: eligibility?.eligible,
-              userBalance: eligibility?.userBalance.toString(),
-              required: eligibility?.required.toString(),
-              reason: eligibility?.reason,
-            },
-            null,
-            2,
-          )}
-        </pre>
-
         <div className='space-y-4'>
-          {/* Raffle Details */}
           <Card>
             <CardContent className='p-4'>
+              <pre>{JSON.stringify({ eligibility: eligibility?.eligible, contractRaffleId }, null, 2)}</pre>
+
               <h3 className='font-semibold text-sm mb-2'>{raffle.title}</h3>
               <p className='text-sm text-muted-foreground mb-3 line-clamp-2'>{raffle.description}</p>
 
@@ -279,10 +272,8 @@ export function ParticipateRaffleDialog({ raffle, open, onOpenChange, onSuccess 
 
           <Separator />
 
-          {/* Eligibility Status */}
           {getEligibilityStatus()}
 
-          {/* Prize Preview */}
           <div className='p-3 bg-primary/5 rounded-lg border border-primary/10'>
             <div className='flex items-center gap-2 mb-1'>
               <Trophy className='w-4 h-4 text-primary' />

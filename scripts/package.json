@@ -3,12 +3,8 @@
   "version": "1.0.0",
   "description": "Seeder de simulation pour Raliz",
   "scripts": {
-    "seed": "bun seed-simulation.ts",
-    "seed:dev": "dotenv -e .env.local -- tsx seed-simulation.ts",
-    "verify": "tsx verify-seeding.ts",
-    "verify:dev": "dotenv -e .env.local -- tsx verify-seeding.ts",
-    "cleanup": "tsx cleanup-database.ts",
-    "cleanup:dev": "dotenv -e .env.local -- tsx cleanup-database.ts"
+    "seed-simulation": "dotenv -e .env -- bun run src/seed-simulation.ts",
+    "get-raffles-ordered": "bun run src/get-raffles-ordered.ts"
   },
   "dependencies": {
     "@faker-js/faker": "^8.4.1",
