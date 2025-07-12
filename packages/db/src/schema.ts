@@ -49,10 +49,15 @@ export const organizerTable = pgTable(
     description: text('description'),
     logoUrl: varchar('logo_url', { length: 500 }),
     walletAddress: varchar('wallet_address', { length: 42 }).notNull().unique(),
+    fanTokenAddress: varchar('fan_token_address', { length: 42 }).notNull().unique(),
     isVerified: boolean('is_verified').notNull().default(false),
     ...timeColumns,
   },
-  (t) => [index('organizers_email_idx').on(t.email), index('organizers_wallet_address_idx').on(t.walletAddress)],
+  (t) => [
+    index('organizers_email_idx').on(t.email), 
+    index('organizers_wallet_address_idx').on(t.walletAddress),
+    index('organizers_fan_token_address_idx').on(t.fanTokenAddress)
+  ],
 );
 
 export const organizerTableRelations = relations(organizerTable, ({ many }) => ({
@@ -69,8 +74,8 @@ export const raffleTable = pgTable(
     prizeDescription: text('prize_description').notNull(),
     imageUrl: varchar('image_url', { length: 500 }),
     participationPrice: decimal('participation_price', { precision: 18, scale: 8 }).notNull().default('0'),
-    tokenContractAddress: varchar('token_contract_address', { length: 42 }),
     tokenSymbol: varchar('token_symbol', { length: 10 }).notNull().default('CHZ'),
+    minimumFanTokens: decimal('minimum_fan_tokens', { precision: 18, scale: 8 }).notNull().default('50'),
     startDate: timestamp('start_date').notNull(),
     endDate: timestamp('end_date').notNull(),
     maxWinners: varchar('max_winners', { length: 10 }).notNull().default('1'),

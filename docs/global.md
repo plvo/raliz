@@ -66,23 +66,36 @@ raliz/
 ### 🛠️ Côté Organisateur (Ex: PSG)
 
 1. **Auth Admin** : Connexion backoffice avec credentials
-2. **Setup Fan Token** : Configure le fan token requis (PSG Token, etc.)
-3. **Création Raffle** : Titre, lot, prix en CHZ, fan token requis, durée
-4. **Monitoring** : Suit les participations en temps réel
-5. **Tirage** : Lance manuellement après `endDate`
-6. **Contact** : Récupère emails des gagnants pour distribution
+2. **Setup Profil** : Enregistrement avec adresse de leur fan token spécifique (ex: PSG Token)
+3. **Connexion Wallet** : Wallet personnel pour payer les frais de gas et transactions
+4. **Création Raffle** : Titre, lot, prix en CHZ, durée (fan token automatiquement celui de l'organisateur)
+5. **Monitoring** : Suit les participations en temps réel
+6. **Tirage** : Lance manuellement après `endDate` (utilise son wallet pour la transaction)
+7. **Contact** : Récupère emails des gagnants pour distribution
+
+### 👤 Système d'Organisateurs Simplifié
+
+**🔧 Configuration organisateur :**
+- **Enregistrement** : L'organisateur s'enregistre avec l'adresse de SON fan token
+- **Wallet séparé** : Un wallet personnel pour payer les frais de gas uniquement
+- **Raffles automatiques** : Toutes ses raffles utilisent automatiquement SON fan token
+
+**Exemples :**
+- **PSG** s'enregistre avec l'adresse du `$PSG` token → Toutes les raffles PSG exigent 50+ `$PSG` tokens
+- **FC Barcelona** s'enregistre avec l'adresse du `$BAR` token → Toutes les raffles Barça exigent 50+ `$BAR` tokens
+- **Manchester City** s'enregistre avec l'adresse du `$CITY` token → Toutes les raffles City exigent 50+ `$CITY` tokens
 
 ### 💰 Nouveau Système de Participation
 
 **🔄 Changement majeur :**
 - **Paiement** : CHZ (token natif) au lieu des fan tokens
-- **Condition** : Détenir minimum 50 fan tokens du sponsor
+- **Condition** : Détenir minimum 50 fan tokens de l'organisateur
 - **Vérification** : Check automatique de la balance avant participation
 
 **Exemples concrets :**
-- **PSG Raffle** → Détenir ≥ 50 `$PSG` tokens + Payer 0.1 CHZ
-- **FC Barcelona** → Détenir ≥ 50 `$BAR` tokens + Payer 0.1 CHZ
-- **Manchester City** → Détenir ≥ 50 `$CITY` tokens + Payer 0.1 CHZ
+- **Raffle créée par PSG** → Détenir ≥ 50 `$PSG` tokens + Payer 0.1 CHZ
+- **Raffle créée par FC Barcelona** → Détenir ≥ 50 `$BAR` tokens + Payer 0.1 CHZ
+- **Raffle créée par Manchester City** → Détenir ≥ 50 `$CITY` tokens + Payer 0.1 CHZ
 
 **Avantages :**
 - ✅ **Simplicité** : Un seul token pour tous les paiements (CHZ)
@@ -125,7 +138,6 @@ Dashboard organisateur :
 - 🎲 Interface tirage gagnants
 - 📧 Export emails gagnants
 - 🏆 Gestion des lots
-- 🎫 Config fan tokens requis
 
 ---
 
@@ -152,8 +164,8 @@ Dashboard organisateur :
 ├── email
 ├── description
 ├── logo_url
-├── wallet_address (UK)
-├── fan_token_address    # Nouveau : adresse de leur fan token
+├── wallet_address (UK)             # Wallet pour payer les frais de gas et transactions
+├── fan_token_address (UK)          # Adresse spécifique de leur propre fan token
 ├── is_verified
 ├── created_at
 ```
@@ -161,14 +173,13 @@ Dashboard organisateur :
 **RAFFLE**
 ```
 ├── id (PK)
-├── organizer_id (FK)
+├── organizer_id (FK)                    # Le fan token requis est celui de l'organisateur
 ├── title
 ├── description
 ├── prize_description
 ├── image_url
-├── participation_price_chz (decimal)     # Nouveau : prix en CHZ
-├── required_fan_token_address           # Nouveau : fan token requis
-├── minimum_fan_tokens (decimal)         # Nouveau : minimum requis
+├── participation_price_chz (decimal)     # Prix en CHZ
+├── minimum_fan_tokens (decimal)         # Minimum de fan tokens requis (défaut: 50)
 ├── start_date
 ├── end_date
 ├── max_winners
@@ -186,8 +197,8 @@ Dashboard organisateur :
 ├── user_id (FK)
 ├── wallet_address
 ├── transaction_hash
-├── chz_paid                            # Nouveau : montant CHZ payé
-├── fan_token_balance_at_participation  # Nouveau : balance au moment de la participation
+├── chz_paid                            # Montant CHZ payé
+├── fan_token_balance_at_participation  # Balance du fan token de l'organisateur au moment de la participation
 ├── participated_at
 ├── is_winner
 ├── notified_at
@@ -242,7 +253,7 @@ contract Raliz is ReentrancyGuard, Ownable, Pausable {
         string title;
         string description;
         uint256 participationFee;      // Prix en CHZ (wei)
-        address requiredFanToken;      // Fan token requis (PSG, BAR, etc.)
+        address requiredFanToken;      // Fan token de l'organisateur (PSG, BAR, etc.)
         uint256 minimumFanTokens;     // Minimum de fan tokens requis (défaut: 50)
         uint256 startDate;
         uint256 endDate;
@@ -252,7 +263,7 @@ contract Raliz is ReentrancyGuard, Ownable, Pausable {
         address[] winners;
         bool isActive;
         bool winnersDrawn;
-        address organizer;
+        address organizer;             // Wallet de l'organisateur pour les transactions
     }
     
     // Fonctions principales
@@ -260,7 +271,7 @@ contract Raliz is ReentrancyGuard, Ownable, Pausable {
         string memory _title,
         string memory _description,
         uint256 _participationFee,      // En CHZ
-        address _requiredFanToken,      // Fan token requis
+        address _requiredFanToken,      // Fan token de l'organisateur
         uint256 _minimumFanTokens,      // Minimum requis (0 = défaut 50)
         uint256 _startDate,
         uint256 _endDate,
@@ -357,9 +368,9 @@ bun run deploy:tokens
 | **💾 Database** | title, description, image_url, organizer_info | UX + Performance |
 
 **Workflow hybride révisé :**
-1. **Admin** crée raffle en DB → Déploie smart contract avec fan token requis
-2. **User** vérifie éligibilité → Transaction CHZ + Sync DB
-3. **Admin** tire gagnants → Stockage blockchain + Notifications DB
+1. **Admin** crée raffle en DB → Déploie smart contract avec SON fan token automatiquement
+2. **User** vérifie éligibilité (fan token de l'organisateur) → Transaction CHZ + Sync DB
+3. **Admin** tire gagnants (avec son wallet) → Stockage blockchain + Notifications DB
 
 ### 🔧 Intégration Architecture Complète
 
