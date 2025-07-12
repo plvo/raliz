@@ -5,18 +5,24 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { WalletButton } from './wallet-button';
 
+const navLinks = [
+  { href: '/', label: 'Home' },
+  { href: '/ranking', label: 'Ranking' },
+  { href: '/profile', label: 'Profile' },
+];
+
 export default function NavApp() {
   const pathname = usePathname();
 
   return (
-    <nav className='backdrop-blur-2xl border-b border-border p-4 fixed top-0 left-0 right-0 z-50'>
+    <nav className='backdrop-blur-2xl border-b border-border p-4 fixed top-0 left-0 right-0 z-50 bg-background/80'>
       <div className='w-full lg:max-w-7xl mx-auto flex items-center justify-between'>
-        <div className='text-2xl font-bold'>Raliz</div>
+        <div className='text-2xl font-bold text-foreground'>Raliz</div>
 
         <div className='flex items-center gap-4'>
-          <NavLink pathname={pathname} href='/' label='Home' />
-          <NavLink pathname={pathname} href='/about' label='About' />
-          <NavLink pathname={pathname} href='/dashboard' label='Dashboard' />
+          {navLinks.map((link) => (
+            <NavLink key={link.href} pathname={pathname} href={link.href} label={link.label} />
+          ))}
         </div>
 
         <div className='flex items-center gap-4'>
@@ -29,7 +35,13 @@ export default function NavApp() {
 
 function NavLink({ pathname, href, label }: { pathname: string; href: string; label: string }) {
   return (
-    <Link href={href} className={cn(pathname === href && 'bg-muted rounded-md px-2 py-1')}>
+    <Link
+      href={href}
+      className={cn(
+        'text-foreground hover:text-primary transition-colors px-2 py-1 rounded-md',
+        pathname === href && 'bg-muted text-primary font-medium',
+      )}
+    >
       {label}
     </Link>
   );

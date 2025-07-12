@@ -1,6 +1,6 @@
 import { relations, sql } from 'drizzle-orm';
 import { uuid } from 'drizzle-orm/pg-core';
-import { boolean, decimal, index, pgEnum, pgTable, text, timestamp, varchar, integer } from 'drizzle-orm/pg-core';
+import { boolean, decimal, index, integer, pgEnum, pgTable, text, timestamp, varchar } from 'drizzle-orm/pg-core';
 
 const timeColumns = {
   createdAt: timestamp('created_at').notNull().defaultNow(),
@@ -32,16 +32,16 @@ export const userTable = pgTable(
     phone: varchar('phone', { length: 255 }),
 
     emailVerified: boolean('email_verified').notNull().default(false),
-    
+
     // Competition fields
     totalPoints: integer('total_points').notNull().default(0),
     totalParticipations: integer('total_participations').notNull().default(0),
     favoriteOrganizerId: uuid('favorite_organizer_id'),
-    
+
     ...timeColumns,
   },
   (t) => [
-    index('users_email_idx').on(t.email), 
+    index('users_email_idx').on(t.email),
     index('users_wallet_address_idx').on(t.walletAddress),
     index('users_total_points_idx').on(t.totalPoints),
     index('users_favorite_organizer_idx').on(t.favoriteOrganizerId),
@@ -69,19 +69,19 @@ export const organizerTable = pgTable(
     password: varchar('password', { length: 255 }),
     description: text('description'),
     logoUrl: varchar('logo_url', { length: 500 }),
-    walletAddress: varchar('wallet_address', { length: 42 }).notNull().unique(),
-    fanTokenAddress: varchar('fan_token_address', { length: 42 }).notNull().unique(),
+    walletAddress: varchar('wallet_address', { length: 43 }).notNull().unique(),
+    fanTokenAddress: varchar('fan_token_address', { length: 43 }).notNull().unique(),
     isVerified: boolean('is_verified').notNull().default(false),
-    
+
     // Competition fields
     totalChzEngaged: decimal('total_chz_engaged', { precision: 18, scale: 8 }).notNull().default('0'),
     totalCompletedRaffles: integer('total_completed_raffles').notNull().default(0),
     leaderboardRank: integer('leaderboard_rank'),
-    
+
     ...timeColumns,
   },
   (t) => [
-    index('organizers_email_idx').on(t.email), 
+    index('organizers_email_idx').on(t.email),
     index('organizers_wallet_address_idx').on(t.walletAddress),
     index('organizers_fan_token_address_idx').on(t.fanTokenAddress),
     index('organizers_total_chz_engaged_idx').on(t.totalChzEngaged),
@@ -128,16 +128,20 @@ export const userSeasonStatsTable = pgTable(
   'user_season_stats',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    userId: varchar('user_id', { length: 255 }).notNull().references(() => userTable.id, { onDelete: 'cascade' }),
-    seasonId: uuid('season_id').notNull().references(() => seasonTable.id, { onDelete: 'cascade' }),
+    userId: varchar('user_id', { length: 255 })
+      .notNull()
+      .references(() => userTable.id, { onDelete: 'cascade' }),
+    seasonId: uuid('season_id')
+      .notNull()
+      .references(() => seasonTable.id, { onDelete: 'cascade' }),
     organizerId: uuid('organizer_id').references(() => organizerTable.id), // Team supported this season
-    
+
     totalPoints: integer('total_points').notNull().default(0),
     totalParticipations: integer('total_participations').notNull().default(0),
     totalChzSpent: decimal('total_chz_spent', { precision: 18, scale: 8 }).notNull().default('0'),
     rankInTeam: integer('rank_in_team'),
     lastParticipationDate: timestamp('last_participation_date'),
-    
+
     ...timeColumns,
   },
   (t) => [
@@ -169,15 +173,19 @@ export const organizerSeasonStatsTable = pgTable(
   'organizer_season_stats',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    organizerId: uuid('organizer_id').notNull().references(() => organizerTable.id, { onDelete: 'cascade' }),
-    seasonId: uuid('season_id').notNull().references(() => seasonTable.id, { onDelete: 'cascade' }),
-    
+    organizerId: uuid('organizer_id')
+      .notNull()
+      .references(() => organizerTable.id, { onDelete: 'cascade' }),
+    seasonId: uuid('season_id')
+      .notNull()
+      .references(() => seasonTable.id, { onDelete: 'cascade' }),
+
     totalChzEngaged: decimal('total_chz_engaged', { precision: 18, scale: 8 }).notNull().default('0'),
     totalRafflesCompleted: integer('total_raffles_completed').notNull().default(0),
     totalParticipantsUnique: integer('total_participants_unique').notNull().default(0),
     averageParticipationRate: decimal('average_participation_rate', { precision: 5, scale: 2 }).notNull().default('0'),
     leaderboardPosition: integer('leaderboard_position'),
-    
+
     ...timeColumns,
   },
   (t) => [
@@ -204,18 +212,20 @@ export const seasonRewardTable = pgTable(
   'season_rewards',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    seasonId: uuid('season_id').notNull().references(() => seasonTable.id, { onDelete: 'cascade' }),
+    seasonId: uuid('season_id')
+      .notNull()
+      .references(() => seasonTable.id, { onDelete: 'cascade' }),
     rewardType: rewardTypeEnum('reward_type').notNull(),
     organizerId: uuid('organizer_id').references(() => organizerTable.id), // For team rewards
     userId: varchar('user_id', { length: 255 }).references(() => userTable.id), // For individual rewards
-    
+
     position: integer('position'), // 1, 2, 3 for TOP 3
     rewardAmountChz: decimal('reward_amount_chz', { precision: 18, scale: 8 }),
     rewardDescription: text('reward_description').notNull(),
     distributed: boolean('distributed').notNull().default(false),
     transactionHash: varchar('transaction_hash', { length: 66 }),
     distributedAt: timestamp('distributed_at'),
-    
+
     ...timeColumns,
   },
   (t) => [
@@ -254,17 +264,17 @@ export const raffleTable = pgTable(
     imageUrl: varchar('image_url', { length: 500 }),
     participationPrice: decimal('participation_price', { precision: 18, scale: 8 }).notNull().default('0'),
     tokenSymbol: varchar('token_symbol', { length: 10 }).notNull().default('CHZ'),
-    minimumFanTokens: decimal('minimum_fan_tokens', { precision: 18, scale: 8 }).notNull().default('50'),
+    minimumFanTokens: integer('minimum_fan_tokens').notNull().default(50),
     startDate: timestamp('start_date').notNull(),
     endDate: timestamp('end_date').notNull(),
     maxWinners: varchar('max_winners', { length: 10 }).notNull().default('1'),
     maxParticipants: varchar('max_participants', { length: 10 }),
     status: raffleStatusEnum('status').notNull().default('DRAFT'),
     smartContractAddress: varchar('smart_contract_address', { length: 42 }),
-    
+
     // Competition fields
     totalChzCollected: decimal('total_chz_collected', { precision: 18, scale: 8 }).notNull().default('0'),
-    
+
     ...timeColumns,
 
     organizerId: uuid('organizer_id')
@@ -307,10 +317,10 @@ export const participationTable = pgTable(
     participatedAt: timestamp('participated_at').notNull().defaultNow(),
     isWinner: boolean('is_winner').notNull().default(false),
     notifiedAt: timestamp('notified_at'),
-    
+
     // Competition fields
     pointsEarned: integer('points_earned').notNull().default(1), // 1 for participation + 5 bonus if winner
-    
+
     ...timeColumns,
 
     raffleId: uuid('raffle_id')

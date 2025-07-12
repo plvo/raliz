@@ -69,44 +69,30 @@ export function UserProvider({ children }: UserProviderProps) {
 
   if (error || errorBalance) {
     return (
-      <div className='flex items-center justify-center min-h-screen'>
-        <Alert variant='destructive' className='max-w-md'>
-          <AlertTitle>Error loading user data</AlertTitle>
-          <AlertDescription>{error?.toString() || errorBalance?.toString()}</AlertDescription>
-        </Alert>
-      </div>
+      <Alert variant='destructive' className='max-w-md'>
+        <AlertTitle>Error loading user data</AlertTitle>
+        <AlertDescription>{error?.toString() || errorBalance?.toString()}</AlertDescription>
+      </Alert>
     );
   }
 
   return (
     <UserContext.Provider value={contextValue}>
-      {user && !user.email ? (
-        <div className='space-y-8'>
-          <Alert className='max-w-lg mx-auto mt-20' variant={'default'}>
-            <AlertTitle>Email not added</AlertTitle>
-            <AlertDescription>
+      {user && !user.email && (
+        <Alert
+          className='max-w-lg mx-auto fixed left-1/2 -translate-x-1/2 bottom-6 z-50 bg-amber-300'
+          variant={'default'}
+        >
+          <AlertDescription className='flex gap-2 items-center justify-between'>
+            <div>
+              <AlertTitle className='text-foreground'>Email not added</AlertTitle>
               <span>Please add your email to do some magic 🪄</span>
-              <AddEmailDialog walletAddress={address} />
-            </AlertDescription>
-          </Alert>
-          {/* <pre className='mt-24'>
-            {JSON.stringify(
-              {
-                contextValue: {
-                  ...contextValue,
-                  balance: contextValue.balance?.value.toString(),
-                  chainId,
-                },
-              },
-              null,
-              2,
-            )}
-          </pre> */}
-          {children}
-        </div>
-      ) : (
-        <main className='mt-20'>{children}</main>
+            </div>
+            <AddEmailDialog walletAddress={address} />
+          </AlertDescription>
+        </Alert>
       )}
+      <main className='mt-20'>{children}</main>
     </UserContext.Provider>
   );
 }

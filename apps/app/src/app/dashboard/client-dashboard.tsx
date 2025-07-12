@@ -5,7 +5,7 @@ import { Button } from '@repo/ui/components/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo/ui/components/card';
 import Link from 'next/link';
 
-function DashboardClient() {
+export default function ClientDashboard() {
   const { user, walletAddress } = useUser();
   if (!user) {
     return (
@@ -105,5 +105,3 @@ function DashboardClient() {
     </section>
   );
 }
-
-export default DashboardClient;
