@@ -129,11 +129,11 @@ async function main() {
     const balanceBefore = await ethers.provider.getBalance(user3.address);
     const tx = await raliz.connect(user3).participate(0, { value: totalSent });
     const receipt = await tx.wait();
-    const gasUsed = receipt!.gasUsed * receipt!.gasPrice;
+    const gasUsed = receipt?.gasUsed ? receipt.gasUsed * receipt.gasPrice : 0;
     const balanceAfter = await ethers.provider.getBalance(user3.address);
     
     const actualCost = balanceBefore - balanceAfter;
-    const expectedCost = participationFee + gasUsed;
+    const expectedCost = participationFee + BigInt(gasUsed);
     
     console.log("💰 Montant envoyé:", ethers.formatEther(totalSent), "CHZ");
     console.log("💰 Coût réel:", ethers.formatEther(actualCost), "CHZ");

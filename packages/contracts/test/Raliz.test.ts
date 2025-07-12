@@ -1,5 +1,6 @@
 import { expect } from "chai";
-import { ethers } from "hardhat";
+import { ethers, network } from "hardhat";
+import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import type { Raliz, MockFanToken } from "../typechain-types";
 import type { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 
@@ -15,6 +16,24 @@ describe("Raliz Contract", () => {
 
     const PARTICIPATION_FEE_CHZ = ethers.parseEther("0.1"); // 0.1 CHZ
     const DEFAULT_MIN_FAN_TOKENS = ethers.parseEther("50"); // 50 fan tokens
+
+    // Fixture pour les tests automatiques
+    async function deployRalizFixture() {
+        const [owner, addr1, addr2, addr3, addr4] = await ethers.getSigners();
+
+        // Déployer les tokens de test
+        const MockFanToken = await ethers.getContractFactory("MockFanToken");
+        const psgToken = await MockFanToken.deploy("PSG Token", "PSG", 18, 1000000);
+
+        // Déployer Raliz
+        const Raliz = await ethers.getContractFactory("Raliz");
+        const raliz = await Raliz.deploy(owner.address);
+
+        // Autoriser le owner comme organisateur
+        await raliz.authorizeOrganizer(owner.address);
+
+        return { raliz, psgToken, owner, addr1, addr2, addr3, addr4 };
+    }
 
     beforeEach(async () => {
         [owner, organizer, user1, user2, user3] = await ethers.getSigners();
@@ -220,13 +239,13 @@ describe("Raliz Contract", () => {
             const totalSent = PARTICIPATION_FEE_CHZ + excessAmount;
 
             const userBalanceBefore = await ethers.provider.getBalance(user1.address);
-            
+
             const tx = await raliz.connect(user1).participate(0, { value: totalSent });
             const receipt = await tx.wait();
             const gasUsed = receipt!.gasUsed * receipt!.gasPrice;
 
             const userBalanceAfter = await ethers.provider.getBalance(user1.address);
-            
+
             // L'utilisateur devrait avoir payé seulement les frais de participation + gas
             const expectedBalance = userBalanceBefore - PARTICIPATION_FEE_CHZ - gasUsed;
             expect(userBalanceAfter).to.be.closeTo(expectedBalance, ethers.parseEther("0.001"));
@@ -374,7 +393,7 @@ describe("Raliz Contract", () => {
 
             // Ajouter quelques participants
             await raliz.connect(user1).participate(0, { value: PARTICIPATION_FEE_CHZ });
-            
+
             await psgToken.transfer(user3.address, ethers.parseEther("60"));
             await raliz.connect(user3).participate(0, { value: PARTICIPATION_FEE_CHZ });
         });
@@ -443,7 +462,7 @@ describe("Raliz Contract", () => {
             const endDate = startDate + 86400 * 7;
 
             await raliz.connect(organizer).createRaffle(
-                "Test Raffle", "Description", PARTICIPATION_FEE_CHZ, 
+                "Test Raffle", "Description", PARTICIPATION_FEE_CHZ,
                 await psgToken.getAddress(), 0, startDate, endDate, 1, 100
             );
 
@@ -452,5 +471,168 @@ describe("Raliz Contract", () => {
             const newBalance = await raliz.getContractBalance();
             expect(newBalance).to.equal(PARTICIPATION_FEE_CHZ);
         });
+    });
+
+    it("Should draw winners automatically on-chain", async () => {
+        const { raliz, psgToken, owner, addr1, addr2, addr3, addr4 } = await loadFixture(deployRalizFixture);
+
+        // Distribuer des PSG tokens aux participants
+        await psgToken.transfer(addr1.address, ethers.parseEther("100"));
+        await psgToken.transfer(addr2.address, ethers.parseEther("100"));
+        await psgToken.transfer(addr3.address, ethers.parseEther("100"));
+        await psgToken.transfer(addr4.address, ethers.parseEther("100"));
+
+        // Créer une raffle avec 2 gagnants maximum
+        const startDate = Math.floor(Date.now() / 1000);
+        const endDate = startDate + 3600; // 1 heure
+
+        await raliz.createRaffle(
+            "Test Automatic Draw",
+            "Test description",
+            ethers.parseEther("0.1"), // 0.1 CHZ
+            await psgToken.getAddress(),
+            ethers.parseEther("50"), // 50 PSG tokens requis
+            startDate,
+            endDate,
+            2, // maxWinners
+            10 // maxParticipants
+        );
+
+        // Les 4 utilisateurs participent
+        await raliz.connect(addr1).participate(0, { value: ethers.parseEther("0.1") });
+        await raliz.connect(addr2).participate(0, { value: ethers.parseEther("0.1") });
+        await raliz.connect(addr3).participate(0, { value: ethers.parseEther("0.1") });
+        await raliz.connect(addr4).participate(0, { value: ethers.parseEther("0.1") });
+
+        // Avancer le temps pour que la raffle se termine
+        await network.provider.send("evm_increaseTime", [3601]); // +1 heure et 1 seconde
+        await network.provider.send("evm_mine");
+
+        // Vérifier le statut avant tirage
+        const statusBefore = await raliz.getRaffleStatus(0);
+        expect(statusBefore.winnersDrawn).to.be.false;
+        expect(statusBefore.participantCount).to.equal(4);
+
+        // Effectuer le tirage automatique
+        const tx = await raliz.drawWinnersAutomatically(0);
+        await tx.wait();
+
+        // Vérifier le résultat
+        const statusAfter = await raliz.getRaffleStatus(0);
+        expect(statusAfter.winnersDrawn).to.be.true;
+        expect(statusAfter.isActive).to.be.false;
+
+        // Vérifier qu'il y a exactement 2 gagnants
+        const winners = await raliz.getWinners(0);
+        expect(winners.length).to.equal(2);
+
+        // Vérifier que les gagnants sont différents
+        expect(winners[0]).to.not.equal(winners[1]);
+
+        // Vérifier que les gagnants font partie des participants
+        const participants = await raliz.getParticipants(0);
+        expect(participants).to.include(winners[0]);
+        expect(participants).to.include(winners[1]);
+
+        // Vérifier l'événement
+        const events = await raliz.queryFilter(raliz.filters.WinnersDrawn(0));
+        expect(events.length).to.equal(1);
+        expect(events[0].args?.winners?.length).to.equal(2);
+    });
+
+    it("Should fail automatic draw if raffle not ended", async () => {
+        const { raliz, psgToken, addr1 } = await loadFixture(deployRalizFixture);
+
+        // Distribuer des PSG tokens
+        await psgToken.transfer(addr1.address, ethers.parseEther("100"));
+
+        // Créer une raffle qui ne se termine pas encore
+        const startDate = Math.floor(Date.now() / 1000);
+        const endDate = startDate + 3600; // 1 heure dans le futur
+
+        await raliz.createRaffle(
+            "Test Future Raffle",
+            "Test description",
+            ethers.parseEther("0.1"),
+            await psgToken.getAddress(),
+            ethers.parseEther("50"),
+            startDate,
+            endDate,
+            1,
+            10
+        );
+
+        // Participant rejoint
+        await raliz.connect(addr1).participate(0, { value: ethers.parseEther("0.1") });
+
+        // Tenter le tirage avant la fin (doit échouer)
+        await expect(raliz.drawWinnersAutomatically(0))
+            .to.be.revertedWith("Raffle not ended yet");
+    });
+
+    it("Should fail automatic draw if no participants", async () => {
+        const { raliz, psgToken } = await loadFixture(deployRalizFixture);
+
+        // Créer une raffle valide qui se terminera dans le futur
+        const startDate = Math.floor(Date.now() / 1000);
+        const endDate = startDate + 3600; // 1 heure dans le futur
+
+        await raliz.createRaffle(
+            "Empty Raffle",
+            "Test description",
+            ethers.parseEther("0.1"),
+            await psgToken.getAddress(),
+            ethers.parseEther("50"),
+            startDate,
+            endDate,
+            1,
+            10
+        );
+
+        // Avancer le temps pour que la raffle se termine
+        await network.provider.send("evm_increaseTime", [3601]); // +1 heure et 1 seconde
+        await network.provider.send("evm_mine");
+
+        // Tenter le tirage sans participants (doit échouer)
+        await expect(raliz.drawWinnersAutomatically(0))
+            .to.be.revertedWith("No participants");
+    });
+
+    it("Should handle automatic draw with more winners than participants", async () => {
+        const { raliz, psgToken, addr1 } = await loadFixture(deployRalizFixture);
+
+        // Distribuer des PSG tokens
+        await psgToken.transfer(addr1.address, ethers.parseEther("100"));
+
+        // Créer une raffle avec plus de gagnants max que de participants
+        const startDate = Math.floor(Date.now() / 1000);
+        const endDate = startDate + 3600;
+
+        await raliz.createRaffle(
+            "Test More Winners",
+            "Test description",
+            ethers.parseEther("0.1"),
+            await psgToken.getAddress(),
+            ethers.parseEther("50"),
+            startDate,
+            endDate,
+            5, // 5 gagnants max mais seulement 1 participant
+            10
+        );
+
+        // Un seul participant
+        await raliz.connect(addr1).participate(0, { value: ethers.parseEther("0.1") });
+
+        // Avancer le temps
+        await network.provider.send("evm_increaseTime", [3601]);
+        await network.provider.send("evm_mine");
+
+        // Effectuer le tirage automatique
+        await raliz.drawWinnersAutomatically(0);
+
+        // Vérifier qu'il n'y a qu'un seul gagnant (pas 5)
+        const winners = await raliz.getWinners(0);
+        expect(winners.length).to.equal(1);
+        expect(winners[0]).to.equal(addr1.address);
     });
 });

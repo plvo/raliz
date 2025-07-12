@@ -106,7 +106,7 @@ async function main() {
     console.log(`NEXT_PUBLIC_BAR_TOKEN_ADDRESS=${barAddress}`);
     console.log(`NEXT_PUBLIC_CITY_TOKEN_ADDRESS=${cityAddress}`);
     console.log('');
-    console.log('🔗 Ajoutez ces variables à votre fichier .env.local dans apps/app/');
+    console.log('🔗 Ajoutez ces variables à votre fichier .env.local dans ce package');
     console.log('');
     console.log('✅ Déploiement terminé avec succès!');
 }

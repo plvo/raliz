@@ -11,12 +11,13 @@
     "build": "bun run compile && tsup",
     "dev": "tsup --watch",
     "test": "hardhat test",
-    "test:workflow": "hardhat run scripts/test-full-workflow.ts --network localhost",
-    "deploy:testnet": "hardhat run scripts/deploy.ts --network chiliz-testnet",
-    "deploy:local": "hardhat run scripts/deploy.ts --network localhost",
-    "deploy:tokens": "hardhat run scripts/deploy-tokens.ts --network chiliz-testnet",
-    "deploy:tokens:local": "hardhat run scripts/deploy-tokens.ts --network localhost",
-    "deploy:spicy": "hardhat run scripts/deploy-spicy.ts --network chiliz-testnet"
+    "test:workflow": "hardhat run src/scripts/test-full-workflow.ts --network localhost",
+    "deploy:testnet": "hardhat run src/scripts/deploy.ts --network chiliz-testnet",
+    "deploy:local": "hardhat run src/scripts/deploy.ts --network localhost",
+    "deploy:tokens": "hardhat run src/scripts/deploy-tokens.ts --network chiliz-testnet",
+    "deploy:tokens:local": "hardhat run src/scripts/deploy-tokens.ts --network localhost",
+    "deploy:spicy": "hardhat run src/scripts/deploy-spicy.ts --network chiliz-testnet",
+    "deploy:spicy-light": "hardhat run src/scripts/deploy-spicy-light.ts --network chiliz-testnet"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-ethers": "^3.0.9",
