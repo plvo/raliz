@@ -221,6 +221,87 @@ contract Raliz is ReentrancyGuard, Ownable, Pausable {
         emit WinnersDrawn(_raffleId, _winners);
     }
     
+    /**
+     * @dev Tirer les gagnants automatiquement on-chain (appelé par l'admin après endDate)
+     * Utilise un algorithme pseudo-aléatoire basé sur les hash de blocs
+     */
+    function drawWinnersAutomatically(uint256 _raffleId) 
+        external 
+        onlyOwner
+        raffleExists(_raffleId)
+    {
+        Raffle storage raffle = raffles[_raffleId];
+        
+        require(block.timestamp > raffle.endDate, "Raffle not ended yet");
+        require(!raffle.winnersDrawn, "Winners already drawn");
+        require(raffle.participants.length > 0, "No participants");
+        
+        uint256 numberOfWinners = raffle.maxWinners;
+        if (numberOfWinners > raffle.participants.length) {
+            numberOfWinners = raffle.participants.length;
+        }
+        
+        // Créer une copie locale des participants pour manipulation
+        address[] memory availableParticipants = new address[](raffle.participants.length);
+        for (uint256 i = 0; i < raffle.participants.length; i++) {
+            availableParticipants[i] = raffle.participants[i];
+        }
+        
+        // Algorithme de Fisher-Yates on-chain avec pseudo-aléatoire
+        for (uint256 i = 0; i < numberOfWinners; i++) {
+            // Générer un nombre pseudo-aléatoire
+            uint256 randomIndex = _generatePseudoRandom(
+                _raffleId, 
+                i, 
+                availableParticipants.length - i
+            ) % (availableParticipants.length - i);
+            
+            // Sélectionner le gagnant
+            address winner = availableParticipants[randomIndex];
+            raffle.winners.push(winner);
+            
+            // Déplacer le dernier élément à la position du gagnant sélectionné
+            // pour éviter de le sélectionner à nouveau
+            availableParticipants[randomIndex] = availableParticipants[availableParticipants.length - 1 - i];
+        }
+        
+        raffle.winnersDrawn = true;
+        raffle.isActive = false;
+        
+        emit WinnersDrawn(_raffleId, raffle.winners);
+    }
+    
+    /**
+     * @dev Génère un nombre pseudo-aléatoire basé sur les hash de blocs
+     * ATTENTION: Pseudo-aléatoire uniquement, pas cryptographiquement sécurisé
+     * Suffisant pour des raffles mais pas pour des applications critiques
+     */
+    function _generatePseudoRandom(
+        uint256 _raffleId, 
+        uint256 _iteration, 
+        uint256 _remainingParticipants
+    ) private view returns (uint256) {
+        // Combiner plusieurs sources de données pour plus d'entropie
+        bytes32 hash = keccak256(abi.encodePacked(
+            // Hash du bloc précédent (ne peut pas être manipulé par l'appelant)
+            blockhash(block.number - 1),
+            // Timestamp du bloc actuel
+            block.timestamp,
+            // Adresse de l'appelant
+            msg.sender,
+            // ID de la raffle
+            _raffleId,
+            // Itération actuelle
+            _iteration,
+            // Nombre de participants restants
+            _remainingParticipants,
+            // Difficulté du bloc (pour plus d'entropie)
+            block.prevrandao // Remplace block.difficulty post-Merge
+        ));
+        
+        return uint256(hash);
+    }
+    
     // ===== ELIGIBILITY CHECK =====
     
     /**

@@ -15,6 +15,16 @@ const config: HardhatUserConfig = {
       viaIR: true,
     },
   },
+  paths: {
+    sources: "./contracts",
+    tests: "./test",
+    cache: "./cache",
+    artifacts: "./artifacts"
+  },
+  typechain: {
+    outDir: "typechain-types",
+    target: "ethers-v6",
+  },
   networks: {
     // Chiliz Testnet (Spicy)
     "chiliz-testnet": {

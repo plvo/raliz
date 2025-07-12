@@ -46,6 +46,7 @@ export const organizerTable = pgTable(
     id: uuid('id').primaryKey().defaultRandom(),
     name: varchar('name', { length: 255 }).notNull(),
     email: varchar('email', { length: 255 }).unique(),
+    password: varchar('password', { length: 255 }),
     description: text('description'),
     logoUrl: varchar('logo_url', { length: 500 }),
     walletAddress: varchar('wallet_address', { length: 42 }).notNull().unique(),

@@ -8,11 +8,7 @@ import { Input } from '@repo/ui/components/input';
 import { Label } from '@repo/ui/components/label';
 import { Badge } from '@repo/ui/components/badge';
 import { Separator } from '@repo/ui/components/separator';
-import BlockchainService, {
-    type RaffleInfo,
-    type RaffleStatus
-} from '@/services/blockchain.service';
-import { CONTRACT_ADDRESSES, RPC_CONFIG } from '@/lib/web3-config';
+import { BlockchainService, CONTRACT_ADDRESSES, RPC_CONFIG, type RaffleInfo, type RaffleStatus } from '@repo/contracts';
 import { ethers } from 'ethers';
 
 interface RaffleWithStatus {

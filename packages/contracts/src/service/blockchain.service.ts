@@ -1,9 +1,6 @@
 import { ethers } from 'ethers';
-import { CONTRACT_ADDRESSES, RPC_CONFIG } from '@/lib/web3-config';
-import { createRalizContract, createMockFanTokenContract, type Raliz, type MockFanToken } from '@repo/contracts';
-
-// ===== INTERFACES SIMPLIFIÉES =====
-// Ces interfaces sont maintenant basées sur les vrais types du contrat
+import { CONTRACT_ADDRESSES, RPC_CONFIG } from '../config/web3-config';
+import { createRalizContract, createMockFanTokenContract, type Raliz, type MockFanToken } from '../index';
 
 export interface RaffleInfo {
     title: string;
@@ -34,11 +31,10 @@ export interface CreateRaffleParams {
     endDate: Date;
 }
 
-class BlockchainService {
+export class BlockchainService {
     private readonly provider: ethers.JsonRpcProvider;
     private readonly signer: ethers.Signer;
 
-    // ✅ Contrats typés avec les vrais types auto-générés
     private readonly ralizContract: Raliz;
     private readonly psgTokenContract: MockFanToken;
     private readonly barTokenContract: MockFanToken;
@@ -48,7 +44,6 @@ class BlockchainService {
         this.provider = provider;
         this.signer = signer;
 
-        // ✅ Utilisation des helpers typés du package contracts
         this.ralizContract = createRalizContract(CONTRACT_ADDRESSES.RALIZ, this.provider);
         this.psgTokenContract = createMockFanTokenContract(CONTRACT_ADDRESSES.PSG_TOKEN, this.provider);
         this.barTokenContract = createMockFanTokenContract(CONTRACT_ADDRESSES.BAR_TOKEN, this.provider);
@@ -222,11 +217,22 @@ class BlockchainService {
     }
 
     /**
-     * Tire au sort les gagnants (organizer seulement)
+     * Tire au sort les gagnants manuellement (organizer seulement)
      */
     async drawWinners(raffleId: number, winners: string[], signer: ethers.Signer): Promise<ethers.ContractTransactionResponse> {
         const contract = createRalizContract(CONTRACT_ADDRESSES.RALIZ, signer);
         return await contract.drawWinners(raffleId, winners);
+    }
+
+    /**
+     * Tire au sort les gagnants automatiquement on-chain (organizer seulement)
+     * Utilise l'algorithme pseudo-aléatoire intégré dans le smart contract
+     * NOTE: Types seront mis à jour après recompilation des contrats
+     */
+    async drawWinnersAutomatically(raffleId: number, signer: ethers.Signer): Promise<ethers.ContractTransactionResponse> {
+        const contract = createRalizContract(CONTRACT_ADDRESSES.RALIZ, signer);
+        // @ts-ignore - Fonction ajoutée au contrat, types seront regénérés après compilation
+        return await contract.drawWinnersAutomatically(raffleId);
     }
 
     /**
@@ -262,5 +268,3 @@ class BlockchainService {
         return number.toFixed(displayDecimals);
     }
 }
-
-export default BlockchainService;

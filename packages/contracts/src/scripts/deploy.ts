@@ -29,7 +29,7 @@ async function main() {
 
     console.log("👤 Propriétaire:", owner);
     console.log("🎲 Nombre de raffles:", totalRaffles.toString());
-    console.log("💸 Fee plateforme:", feePercentage.toString() / 100, "%");
+    console.log("💸 Fee plateforme:", Number(feePercentage.toString()) / 100, "%");
     console.log("🎫 Minimum fan tokens par défaut:", ethers.formatEther(defaultMinFanTokens));
 
     console.log("\n📋 Résumé du déploiement:");

@@ -24,17 +24,5 @@ export function createMockFanTokenContract(
     return new ethers.Contract(address, MockFanTokenABI, signerOrProvider) as unknown as MockFanToken;
 }
 
-export const CONTRACT_NETWORKS = {
-    CHILIZ_SPICY_TESTNET: {
-        chainId: 88882,
-        name: 'Chiliz Spicy Testnet',
-        rpcUrl: 'https://spicy-rpc.chiliz.com',
-        blockExplorer: 'https://testnet.chiliscan.com'
-    },
-    CHILIZ_MAINNET: {
-        chainId: 88888,
-        name: 'Chiliz Mainnet',
-        rpcUrl: 'https://rpc.chiliz.com',
-        blockExplorer: 'https://chiliscan.com'
-    }
-} as const; 
+export * from './config/web3-config';
+export * from './service/blockchain.service';
