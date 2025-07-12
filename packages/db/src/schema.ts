@@ -11,9 +11,9 @@ const timeColumns = {
 export const raffleStatusEnum = pgEnum('raffle_status', ['DRAFT', 'ACTIVE', 'ENDED']);
 export const notificationTypeEnum = pgEnum('notification_type', [
   'RAFFLE_CREATED',
-  'PARTICIPATION_CONFIRMED', 
+  'PARTICIPATION_CONFIRMED',
   'WINNER_SELECTED',
-  'RAFFLE_ENDED'
+  'RAFFLE_ENDED',
 ]);
 
 // User table (keep for auth)
@@ -21,79 +21,22 @@ export const userTable = pgTable(
   'users',
   {
     id: varchar('id', { length: 255 }).primaryKey(),
-    email: varchar('email', { length: 255 }).notNull().unique(),
-    firstName: varchar('first_name', { length: 255 }).notNull(),
-    lastName: varchar('last_name', { length: 255 }).notNull(),
-    username: varchar('username', { length: 255 }).unique(),
-    walletAddress: varchar('wallet_address', { length: 42 }).unique(),
+    username: varchar('username', { length: 255 }).unique().notNull(),
+    walletAddress: varchar('wallet_address', { length: 42 }).unique().notNull(),
+    email: varchar('email', { length: 255 }).unique(),
+    firstName: varchar('first_name', { length: 255 }),
+    lastName: varchar('last_name', { length: 255 }),
     phone: varchar('phone', { length: 255 }),
-    // Better auth fields
-    emailVerified: boolean('email_verified').notNull().default(true),
-    role: varchar('role', { length: 255 }).notNull().default('user'),
-    banned: boolean('banned').notNull().default(false),
-    banReason: varchar('ban_reason', { length: 255 }),
-    banExpires: timestamp('ban_expires'),
+
+    emailVerified: boolean('email_verified').notNull().default(false),
     ...timeColumns,
   },
-  (t) => [
-    index('users_email_idx').on(t.email),
-    index('users_wallet_address_idx').on(t.walletAddress),
-  ],
+  (t) => [index('users_email_idx').on(t.email), index('users_wallet_address_idx').on(t.walletAddress)],
 );
 
 export const userTableRelations = relations(userTable, ({ many }) => ({
-  accounts: many(userAccountTable),
-  sessions: many(userSessionTable),
   participations: many(participationTable),
   notifications: many(notificationTable),
-}));
-
-// UserAccount table (keep for auth)
-export const userAccountTable = pgTable('user_accounts', {
-  id: varchar('id', { length: 255 }).primaryKey(),
-  accountId: varchar('account_id', { length: 255 }).notNull(),
-  providerId: varchar('provider_id', { length: 255 }).notNull(),
-  accessToken: text('access_token'),
-  refreshToken: text('refresh_token'),
-  idToken: text('id_token'),
-  accessTokenExpiresAt: timestamp('access_token_expires_at'),
-  refreshTokenExpiresAt: timestamp('refresh_token_expires_at'),
-  scope: varchar('scope', { length: 255 }),
-  password: varchar('password', { length: 255 }),
-  ...timeColumns,
-
-  userId: varchar('user_id', { length: 255 })
-    .notNull()
-    .references(() => userTable.id),
-});
-
-export const userAccountTableRelations = relations(userAccountTable, ({ one }) => ({
-  user: one(userTable, {
-    fields: [userAccountTable.userId],
-    references: [userTable.id],
-  }),
-}));
-
-// UserSession table (keep for auth)
-export const userSessionTable = pgTable('user_sessions', {
-  id: varchar('id', { length: 255 }).primaryKey(),
-  token: varchar('token', { length: 255 }).notNull().unique(),
-  ipAddress: varchar('ip_address', { length: 255 }),
-  userAgent: varchar('user_agent', { length: 255 }),
-  expiresAt: timestamp('expires_at').notNull(),
-  impersonatedBy: varchar('impersonated_by', { length: 255 }),
-  ...timeColumns,
-
-  userId: varchar('user_id', { length: 255 })
-    .notNull()
-    .references(() => userTable.id, { onDelete: 'cascade' }),
-});
-
-export const userSessionTableRelations = relations(userSessionTable, ({ one }) => ({
-  user: one(userTable, {
-    fields: [userSessionTable.userId],
-    references: [userTable.id],
-  }),
 }));
 
 // Organizer table
@@ -102,17 +45,14 @@ export const organizerTable = pgTable(
   {
     id: uuid('id').primaryKey().defaultRandom(),
     name: varchar('name', { length: 255 }).notNull(),
-    email: varchar('email', { length: 255 }).notNull().unique(),
+    email: varchar('email', { length: 255 }).unique(),
     description: text('description'),
     logoUrl: varchar('logo_url', { length: 500 }),
     walletAddress: varchar('wallet_address', { length: 42 }).notNull().unique(),
     isVerified: boolean('is_verified').notNull().default(false),
     ...timeColumns,
   },
-  (t) => [
-    index('organizers_email_idx').on(t.email),
-    index('organizers_wallet_address_idx').on(t.walletAddress),
-  ],
+  (t) => [index('organizers_email_idx').on(t.email), index('organizers_wallet_address_idx').on(t.walletAddress)],
 );
 
 export const organizerTableRelations = relations(organizerTable, ({ many }) => ({

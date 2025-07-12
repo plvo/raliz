@@ -6,8 +6,6 @@ export default function Home() {
         nisi nostrum perferendis neque quasi obcaecati temporibus ullam, quod nemo ad fuga molestias voluptatem
         voluptate.
       </div>
-
-      <iframe className='h-screen w-full' src='https://magiceden.io/' title='Web3Auth Docs' />
     </section>
   );
 }
