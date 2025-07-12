@@ -10,12 +10,14 @@ import {
   Trophy, 
   Activity, 
   Plus,
-  ArrowRight
+  ArrowRight,
+  AlertTriangle
 } from 'lucide-react';
 import Link from 'next/link';
 import { useUser } from '@/lib/providers/user-provider';
 import { useActionQuery } from '@/hooks/use-action';
 import { getRaffleStats, getOrganizerRaffles } from '@/actions/raffle/get';
+import { Badge } from '@repo/ui/components/badge';
 
 export default function DashboardPage() {
   const { user } = useUser();
@@ -50,15 +52,15 @@ export default function DashboardPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-muted-foreground">
-            Welcome back, {user?.name || 'Organizer'}! Here's what's happening with your raffles.
+            Welcome back! Here's an overview of your raffles and engagement metrics.
           </p>
         </div>
-        <Button asChild>
-          <Link href="/raffles/create">
-            <Plus className="w-4 h-4 mr-2" />
-            Create Raffle
-          </Link>
-        </Button>
+        <div className="flex items-center space-x-2">
+          <Badge variant="outline" className="text-amber-600 border-amber-600">
+            <AlertTriangle className="w-3 h-3 mr-1" />
+            Funds managed by super admin
+          </Badge>
+        </div>
       </div>
 
       {/* Stats Cards */}

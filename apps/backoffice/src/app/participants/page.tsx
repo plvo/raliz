@@ -120,13 +120,16 @@ export default function ParticipantsPage() {
 
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Revenue</CardTitle>
+                        <CardTitle className="text-sm font-medium">Team Collection</CardTitle>
                         <DollarSign className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">45,678 CHZ</div>
                         <p className="text-xs text-muted-foreground">
-                            +25% from last month
+                            +12.5% from last month
+                        </p>
+                        <p className="text-xs text-amber-600 mt-2">
+                            ⚠️ Goes to common pool - TOP 3 teams qualify
                         </p>
                     </CardContent>
                 </Card>

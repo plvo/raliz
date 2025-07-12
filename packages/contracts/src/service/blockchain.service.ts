@@ -235,12 +235,28 @@ export class BlockchainService {
         return await contract.drawWinnersAutomatically(raffleId);
     }
 
+    // ===== SUPER ADMIN ONLY METHODS =====
+    // 🚨 ATTENTION: Ces méthodes sont réservées au super admin (owner du contrat)
+    // Les organisateurs ne peuvent PAS les utiliser !
+
     /**
-     * Retire les fonds d'une raffle (admin seulement)
+     * Retire les fonds d'une raffle (SUPER ADMIN SEULEMENT)
+     * ⚠️ Cette méthode ne doit être utilisée que par le super admin pour la gestion du pool commun
+     * Les organisateurs ne peuvent pas retirer les fonds directement
      */
     async withdrawRaffleFunds(raffleId: number, signer: ethers.Signer): Promise<ethers.ContractTransactionResponse> {
         const contract = createRalizContract(CONTRACT_ADDRESSES.RALIZ as string, signer);
         return await contract.withdrawRaffleFunds(raffleId);
+    }
+
+    /**
+     * Retire tous les fonds CHZ du pool commun (SUPER ADMIN SEULEMENT)
+     * ⚠️ Cette méthode retire tous les fonds pour redistribution aux participants du TOP 3 des équipes
+     * Les organisateurs ne peuvent pas retirer les fonds directement
+     */
+    async withdrawAllCHZ(signer: ethers.Signer): Promise<ethers.ContractTransactionResponse> {
+        const contract = createRalizContract(CONTRACT_ADDRESSES.RALIZ as string, signer);
+        return await contract.withdrawCHZ();
     }
 
     // ===== ORGANIZER AUTHORIZATION METHODS =====

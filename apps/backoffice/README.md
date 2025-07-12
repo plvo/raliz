@@ -223,3 +223,104 @@ All database interactions use server actions with proper authentication:
 ---
 
 **🎯 The authentication system is now secure and ready for production use!** 
+
+## 🔐 Financial Management & Security
+
+### 💰 Fund Management Structure - Competitive Pool System
+
+**🚨 IMPORTANT: Organizers CANNOT withdraw funds directly**
+
+**Role Separation:**
+- **Organizers** (clubs/teams): Create raffles, manage participants, compete for TOP 3 ranking
+- **Super Admin** (Raliz platform): Manages all financial operations and pool redistribution
+
+**Fund Flow - Competitive Pool:**
+1. **Collection**: All participants pay CHZ → **Common pool** in smart contract
+2. **Team Ranking**: Organizers ranked by **total CHZ collected** across all their raffles
+3. **Security**: Only super admin can withdraw from the common pool
+4. **Distribution**: Super admin redistributes to **participants who joined raffles of TOP 3 teams** (minus 2.5% platform fee)
+
+### 🏆 Competitive Dynamics
+
+**Team Competition:**
+- All teams compete to collect the most CHZ across their raffles
+- Only **TOP 3 teams** by collection amount qualify for redistribution
+- Creates incentive for teams to create attractive raffles
+
+**Participant Rewards:**
+- Participants who supported TOP 3 teams receive redistribution
+- Encourages strategic participation in high-performing team raffles
+- Rewards loyalty to successful teams
+
+### 🛡️ Security Features
+
+**Smart Contract Protection:**
+- All funds stored in single pool within Raliz smart contract
+- Only contract owner (super admin) can withdraw from pool
+- Automatic platform fee deduction (2.5%)
+- Transparent on-chain tracking of all contributions
+
+**Interface Safeguards:**
+- Revenue metrics show team collection performance
+- Clear warnings about fund management
+- No withdrawal buttons for organizers
+- Explicit role definitions in settings
+
+### 📊 What Organizers Can See
+
+**✅ Available Functions:**
+- Create and manage raffles
+- View participation statistics
+- Draw winners and contact participants
+- Monitor team collection performance vs other teams
+- Access CHZ collection metrics (display only)
+
+**❌ Restricted Functions:**
+- Withdraw CHZ funds from pool
+- Access smart contract funds
+- Modify platform fees
+- Direct fund redistribution
+
+### 🔄 Super Admin Functions
+
+**Financial Operations:**
+- `withdrawCHZ()`: Withdraw all funds from common pool
+- `withdrawRaffleFunds(raffleId)`: Withdraw specific raffle funds
+- Calculate TOP 3 teams by collection amount
+- Redistribute funds to qualifying participants
+- Platform fee collection
+
+**Administrative:**
+- Authorize/revoke organizers
+- Season management
+- Competition ranking calculations
+- Emergency pause/unpause
+
+---
+
+## 🎯 Key Architecture Decisions
+
+### Why Pool-Based Competition System?
+
+**Team Incentives:** Teams compete to create the most attractive raffles
+**Participant Strategy:** Participants choose which teams to support
+**Fair Distribution:** Only supporters of successful teams are rewarded
+**Transparent Competition:** All collection amounts visible on-chain
+
+### Benefits for Organizers
+
+**Competitive Edge:** Performance directly impacts participant rewards
+**Focus on Quality:** Incentive to create engaging raffles
+**Transparent Metrics:** Clear visibility of collection performance
+**Professional Setup:** Enterprise-grade financial security
+
+### Benefits for Participants
+
+**Strategic Participation:** Choose which teams to support
+**Performance Rewards:** Backing successful teams pays off
+**Transparent Process:** All payments and rankings visible on-chain
+**Secure Distribution:** Funds protected until redistribution
+
+---
+
+This architecture creates a competitive ecosystem where team performance determines participant rewards, encouraging both quality raffles and strategic participation. 

@@ -14,9 +14,11 @@ import {
     Palette,
     Globe,
     Save,
-    Upload
+    Upload,
+    AlertTriangle
 } from 'lucide-react';
 import type { Metadata } from 'next';
+import { CardDescription } from '@repo/ui/components/card';
 
 export const metadata: Metadata = {
     title: 'Settings - Raliz Backoffice',
@@ -175,6 +177,51 @@ export default function SettingsPage() {
                                     </p>
                                 </div>
                                 <Switch defaultChecked />
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Roles & Responsibilities */}
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <AlertTriangle className="w-5 h-5 text-amber-600" />
+                            Roles & Responsibilities
+                        </CardTitle>
+                        <CardDescription>
+                            Understanding your role as an organizer
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-4">
+                            <div className="p-4 bg-green-50 rounded-lg">
+                                <h4 className="font-medium text-green-900 mb-2">✅ What you CAN do:</h4>
+                                <ul className="text-sm text-green-800 space-y-1">
+                                    <li>• Create and manage raffles</li>
+                                    <li>• Set participation prices and requirements</li>
+                                    <li>• Draw winners and contact them</li>
+                                    <li>• View participants and statistics</li>
+                                    <li>• Compete for TOP 3 ranking to benefit your participants</li>
+                                </ul>
+                            </div>
+                            <div className="p-4 bg-amber-50 rounded-lg">
+                                <h4 className="font-medium text-amber-900 mb-2">⚠️ What you CANNOT do:</h4>
+                                <ul className="text-sm text-amber-800 space-y-1">
+                                    <li>• Withdraw CHZ funds from the common pool</li>
+                                    <li>• Access the smart contract funds directly</li>
+                                    <li>• Modify platform fees or financial settings</li>
+                                </ul>
+                            </div>
+                            <div className="p-4 bg-blue-50 rounded-lg">
+                                <h4 className="font-medium text-blue-900 mb-2">💡 How the competitive pool works:</h4>
+                                <ul className="text-sm text-blue-800 space-y-1">
+                                    <li>• All CHZ payments go to a common pool in the smart contract</li>
+                                    <li>• Teams are ranked by total CHZ collected across their raffles</li>
+                                    <li>• Only participants of TOP 3 teams receive redistribution</li>
+                                    <li>• The super admin manages pool withdrawal and redistribution</li>
+                                    <li>• Platform fees (2.5%) are automatically deducted</li>
+                                </ul>
                             </div>
                         </div>
                     </CardContent>
