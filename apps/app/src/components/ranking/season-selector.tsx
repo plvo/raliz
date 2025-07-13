@@ -10,7 +10,7 @@ import { Calendar, Clock, TrendingUp } from 'lucide-react';
 interface SeasonSelectorProps {
   seasons: Season[];
   selectedSeasonId: string | null;
-  onSeasonChange: (seasonId: string | null) => void;
+  onSeasonChange: (seasonId: string) => void;
 }
 
 export function SeasonSelector({ seasons, selectedSeasonId, onSeasonChange }: SeasonSelectorProps) {
@@ -24,7 +24,7 @@ export function SeasonSelector({ seasons, selectedSeasonId, onSeasonChange }: Se
           </div>
 
           <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3'>
-            {/* Overall Option */}
+            {/* 
             <Button
               variant={selectedSeasonId === null ? 'default' : 'outline'}
               className={cn(
@@ -38,9 +38,8 @@ export function SeasonSelector({ seasons, selectedSeasonId, onSeasonChange }: Se
                 <span className='font-medium'>Overall</span>
               </div>
               <span className='text-xs text-muted-foreground'>All-time rankings</span>
-            </Button>
+            </Button> */}
 
-            {/* Season Options */}
             {seasons.map((season) => (
               <Button
                 key={season.id}

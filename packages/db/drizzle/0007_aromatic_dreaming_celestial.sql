@@ -1,0 +1,1 @@
+ALTER TABLE "organizers" ADD COLUMN "fan_token_symbol" varchar(10) NOT NULL;
