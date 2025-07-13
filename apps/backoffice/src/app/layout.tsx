@@ -5,6 +5,9 @@ import { Toaster } from 'sonner';
 import '@/styles/globals.css';
 import { cookieToWeb3AuthState } from '@web3auth/modal';
 import { headers } from 'next/headers';
+import { SidebarProvider } from '@repo/ui/components/sidebar';
+import { AppSidebar } from '@/components/shared/backoffice-sidebar';
+import { AuthWrapper } from '@/lib/wrappers/with-auth';
 
 const geistSans = localFont({
   src: '../styles/fonts/GeistVF.woff',
@@ -19,11 +22,10 @@ const geistMono = localFont({
 
 export const metadata: Metadata = {
   title: {
-    template: '%s | Classyc',
-    default: 'Accueil | Classyc',
+    template: '%s | Raliz Backoffice',
+    default: 'Dashboard | Raliz Backoffice',
   },
-  description:
-    "Classyc est une application dédiée aux enseignants du premier cycle, permettant de gérer efficacement les classes, suivre les progrès des élèves, planifier les leçons et communiquer avec les parents. Un outil complet pour simplifier le quotidien des professionnels de l'éducation primaire.",
+  description: 'Raliz Backoffice - Manage your raffles, participants, and winners on the blockchain.',
 };
 
 export default async function RootLayout({
@@ -38,7 +40,16 @@ export default async function RootLayout({
     <html lang='en' suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning>
         <Providers web3authInitialState={web3authInitialState}>
-          <main>{children}</main>
+          <AuthWrapper>
+            <SidebarProvider>
+              <div className="flex h-screen">
+                <AppSidebar />
+                <main className="flex-1 bg-background">
+                  {children}
+                </main>
+              </div>
+            </SidebarProvider>
+          </AuthWrapper>
           <Toaster />
         </Providers>
       </body>

@@ -1,9 +1,8 @@
 'use client';
 
-import { getWeb3User } from '@/actions/auth/web3auth';
-import { AddEmailDialog } from '@/components/shared/email-dialog';
+import { getOrganizerProfile } from '@/actions/organizer/get';
 import { useActionQuery } from '@/hooks/use-action';
-import type { User } from '@repo/db';
+import type { Organizer } from '@repo/db';
 import { Alert, AlertDescription, AlertTitle } from '@repo/ui/components/alert';
 import { useWeb3AuthConnect } from '@web3auth/modal/react';
 import type * as React from 'react';
@@ -11,7 +10,7 @@ import { createContext, useContext } from 'react';
 import { useAccount, useBalance } from 'wagmi';
 
 interface UserContextType {
-  user: User | null;
+  user: Organizer | null;
   walletAddress: `0x${string}` | undefined;
   chainId: number | undefined;
   balance:
@@ -38,17 +37,23 @@ export function UserProvider({ children }: UserProviderProps) {
   const { isConnected } = useWeb3AuthConnect();
 
   const {
-    data: user,
+    data: organizer = null,
     isLoading,
     error,
     refetch: refetchUser,
-  } = useActionQuery({
-    actionFn: () => getWeb3User(address || ''),
-    queryKey: ['user', address || ''],
+  } = useActionQuery<Organizer | null>({
+    actionFn: async () => {
+      if (!address) {  // If the user is not connected, return null
+        return { ok: true, data: null };
+      }
+
+      return getOrganizerProfile(address);
+    },
+    queryKey: ['organizer', address || ''],
   });
 
   const contextValue: UserContextType = {
-    user: user || null,
+    user: organizer || null,
     balance,
     walletAddress: address,
     chainId,
@@ -61,7 +66,6 @@ export function UserProvider({ children }: UserProviderProps) {
       <div className='flex items-center justify-center min-h-screen'>
         <div className='text-center'>
           <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4' />
-          <p>Loading user data...</p>
         </div>
       </div>
     );
@@ -80,33 +84,7 @@ export function UserProvider({ children }: UserProviderProps) {
 
   return (
     <UserContext.Provider value={contextValue}>
-      {user && !user.email ? (
-        <div className='space-y-8'>
-          <Alert className='max-w-lg mx-auto mt-20' variant={'default'}>
-            <AlertTitle>Email not added</AlertTitle>
-            <AlertDescription>
-              <span>Please add your email to do some magic 🪄</span>
-              <AddEmailDialog walletAddress={address} />
-            </AlertDescription>
-          </Alert>
-          {/* <pre className='mt-24'>
-            {JSON.stringify(
-              {
-                contextValue: {
-                  ...contextValue,
-                  balance: contextValue.balance?.value.toString(),
-                  chainId,
-                },
-              },
-              null,
-              2,
-            )}
-          </pre> */}
-          {children}
-        </div>
-      ) : (
-        <main className='mt-20'>{children}</main>
-      )}
+      {children}
     </UserContext.Provider>
   );
 }
