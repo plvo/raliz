@@ -22,6 +22,8 @@ export default async function HomePage() {
 async function Content() {
   const orgsRes = await getOrgs();
 
+  console.log(orgsRes);
+
   if (!orgsRes.ok) {
     throw new Error(orgsRes.message);
   }

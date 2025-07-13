@@ -1,4 +1,3 @@
-// @ts-nocheck - Version compatibility issues with Drizzle ORM between workspace and local node_modules
 import { faker } from '@faker-js/faker';
 import { RalizABI } from '@repo/contracts';
 import type { Raliz } from '@repo/contracts/typechain-types';
@@ -16,7 +15,7 @@ import {
   winnerTable,
 } from '@repo/db';
 import bcrypt from 'bcryptjs';
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, or } from 'drizzle-orm';
 import { ethers } from 'ethers';
 
 // Configuration
@@ -25,10 +24,10 @@ const PRIVATE_KEY = '0xba56aff2a5282583c0b83c543a24e4bfe69edc440a581c115b5d8c51f
 const RPC_URL = 'https://spicy-rpc.chiliz.com';
 
 const FAN_TOKENS = {
-  PSG: '0xC6eBeceC197645d04890D7697744a828495159D6',
-  BAR: '0x9D5C707722ef87918C9002562F7EBDa3012fEe2a',
-  CITY: '0xD20d41726d048a11E46bEbFcBCa9B485D000afC8',
-  GAL: '0x7dd87529f5BEA538c2e686Db86B4878930cced5F8',
+  PSG: '0x1de38d1def488Dc35d48F62C87647f9864C029f2',
+  BAR: '0x3877B63d3Db6163b26B34250dD06f88a7a219CA3',
+  CITY: '0xB33C9B5454EB4377520731CC545fB062B63Afd83',
+  GAL: '0xBc2873F1e3d303D9F23E24CB5c42E84832aeEef6',
 };
 
 // Initialize blockchain connection
@@ -37,6 +36,241 @@ const signer = new ethers.Wallet(PRIVATE_KEY, provider);
 
 // Contract instance
 const contract = new ethers.Contract(RALIZ_CONTRACT_ADDRESS, RalizABI, signer) as unknown as Raliz;
+
+// Main seeder function
+async function seedSimulation() {
+  console.log('🌱 Starting Raliz simulation seeder...');
+
+  try {
+    // 1. Create Seasons - Updated to current year
+    console.log('\n📅 Creating seasons...');
+    const currentYear = new Date().getFullYear();
+    const now = new Date();
+    const season1 = await createSeason(
+      `Saison Q1 ${currentYear}`,
+      new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000), // 90 days ago
+      new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
+      false,
+    );
+    const season2 = await createSeason(
+      `Saison Q2 ${currentYear}`,
+      new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
+      new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000), // 90 days from now
+      true,
+    );
+
+    if (!season1 || !season2) {
+      throw new Error('Failed to create seasons');
+    }
+
+    // const season1 = {
+    //   id: 'd4d83e59-3229-41ec-a9da-f2f5c9316835',
+    // };
+    // const season2 = {
+    //   id: 'cb6b6708-6783-4ec4-a8a9-8022f866227e',
+    // };
+
+    // 2. Create Organizers
+    console.log('\n🏢 Creating organizers...');
+
+    // Insert organizers if not already present, then fetch them with correct column mapping
+    // (drizzle-orm requires camelCase keys matching the schema)
+    await db
+      .insert(organizerTable)
+      .values([
+        {
+          name: 'Manchester City',
+          email: 'manchester-city@example.com',
+          password: '$2b$10$142VmFQWry6XfXm.GMDsrOFV8EiaHm39cHNXESwi5V.Ha4oFpzQce',
+          description: 'Manchester City is a football club based in Manchester, England.',
+          logoUrl: 'https://fr.mancity.com/dist/images/logos/crest.svg',
+          walletAddress: '0x116F2F9e6fEe5ad8d308a6b0E882E74B9fA6a236',
+          fanTokenAddress: '0xB33C9B5454EB4377520731CC545fB062B63Afd83',
+          fanTokenSymbol: 'CITY',
+          isVerified: true,
+          totalChzEngaged: '0.00000000',
+          totalCompletedRaffles: 0,
+          leaderboardRank: null,
+        },
+        {
+          name: 'Paris Saint-Germain',
+          email: 'psg@example.com',
+          password: '$2b$10$8qxAz.FdrSYjuaBsq.6B3uLmaZ3LKxkoADnkiPnB8HAg12UoQ9M3a',
+          description: 'Paris Saint-Germain is a football club based in Paris, France.',
+          logoUrl: 'https://www.psg.fr/themes/custom/psg/logo.svg',
+          walletAddress: '0x8342beD0Af2372C9370a56aBB0D1D908B49349a8',
+          fanTokenAddress: '0x1de38d1def488Dc35d48F62C87647f9864C029f2',
+          fanTokenSymbol: 'PSG',
+          isVerified: true,
+          totalChzEngaged: '0.00000000',
+          totalCompletedRaffles: 0,
+          leaderboardRank: null,
+        },
+        {
+          name: 'Galatasaray',
+          email: 'galatasaray@example.com',
+          password: '$2b$10$BgA/wb4IQVQ1Aezi0p6D..OR5r2UBT/4moHfZMBGR1DuRIQUvltja',
+          description: 'Galatasaray is a football club based in Istanbul, Turkey.',
+          logoUrl:
+            'https://upload.wikimedia.org/wikipedia/fr/thumb/b/bd/Logo_Galatasaray_SK_2023.svg/1200px-Logo_Galatasaray_SK_2023.svg.png',
+          walletAddress: '0xd92A5E1F95A56D3aDa442D94457f5aCDE4A4D36F',
+          fanTokenAddress: '0xBc2873F1e3d303D9F23E24CB5c42E84832aeEef6',
+          fanTokenSymbol: 'GAL',
+          isVerified: true,
+          totalChzEngaged: '0.00000000',
+          totalCompletedRaffles: 0,
+          leaderboardRank: null,
+        },
+        {
+          name: 'FC Barcelona',
+          email: 'barcelona@example.com',
+          password: '$2b$10$TPu3farPaiFvxTZ3F4dpMeY6qWZ1rBD56pYM7tYLanUFsghYawVIO',
+          description: 'FC Barcelona is a football club based in Barcelona, Spain.',
+          logoUrl:
+            'https://upload.wikimedia.org/wikipedia/fr/thumb/1/1d/Logo_FC_Barcelone.svg/langfr-250px-Logo_FC_Barcelone.svg.png',
+          walletAddress: '0x7913D77c13aB41c63F6031afE1608D24f4f30901',
+          fanTokenAddress: '0x3877B63d3Db6163b26B34250dD06f88a7a219CA3',
+          fanTokenSymbol: 'BAR',
+          isVerified: true,
+          totalChzEngaged: '0.00000000',
+          totalCompletedRaffles: 0,
+          leaderboardRank: null,
+        },
+      ])
+      .onConflictDoNothing();
+
+    // Fetch all organizers (with correct column names)
+    const organizers = await db.select().from(organizerTable);
+
+    // 3. Create Users
+    console.log('\n👥 Creating users...');
+    // const users = await createUsers(50);
+    const users = await db.select().from(userTable);
+
+    // 4. Create Raffles for Season 1 (completed) - Updated dates
+    console.log('\n🎟️ Creating raffles for Season 1...');
+    const season1Raffles = [];
+
+    for (const organizer of organizers) {
+      for (let i = 0; i < 1; i++) {
+        // Use future dates for blockchain validation, then mark as completed in DB
+        const now = new Date();
+        const startDate = new Date(now.getTime() + i * 24 * 60 * 60 * 1000); // i days from now
+        const endDate = new Date(startDate.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days later
+
+        const raffle = await createRaffle(
+          organizer.id,
+          season1.id,
+          `${organizer.name} - ${faker.commerce.productName()}`,
+          startDate,
+          endDate,
+          true, // completed
+        );
+        season1Raffles.push(raffle);
+      }
+    }
+
+    // 5. Create participations for Season 1 with winners
+    // console.log('\n🎯 Creating participations and winners for Season 1...');
+    // for (const raffle of season1Raffles) {
+    //   const participantCount = randomBetween(10, 30);
+    //   const participants = faker.helpers.arrayElements(users, participantCount);
+
+    //   const participations = [];
+    //   for (const user of participants) {
+    //     if (!user) continue;
+    //     const participation = await createParticipation(user.id, raffle.id, raffle.blockchainId);
+    //     participations.push({ participation, user });
+    //   }
+
+    //   // Select winners (1-3 based on raffle config)
+    //   const maxWinners = raffle.maxWinners;
+    //   if (!maxWinners) continue;
+
+    //   const winnerCount = Number.parseInt(maxWinners);
+    //   const winners = faker.helpers.arrayElements(participations, Math.min(winnerCount, participations.length));
+
+    //   for (let i = 0; i < winners.length; i++) {
+    //     const winner = winners[i];
+    //     if (!winner) continue;
+
+    //     if (!winner.participation || !winner.user) continue;
+
+    //     await createWinner(
+    //       winner.participation.id,
+    //       raffle.id,
+    //       winner.user.id,
+    //       `${i + 1}`, // rank
+    //     );
+
+    //     // Update participation as winner
+    //     await db
+    //       .update(participationTable)
+    //       .set({ isWinner: true, pointsEarned: 6 }) // 1 base + 5 bonus
+    //       .where(eq(participationTable.id as any, winner.participation.id));
+    //   }
+    // }
+
+    // 6. Create Raffles for Season 2 (ongoing) - Updated dates
+    console.log('\n🎟️ Creating raffles for Season 2 (ongoing)...');
+    const season2Raffles = [];
+
+    for (const organizer of organizers) {
+      for (let i = 0; i < randomBetween(1, 3); i++) {
+        // Use future dates for blockchain validation
+        const now = new Date();
+        const startDate = new Date(now.getTime() + (30 + i * 7) * 24 * 60 * 60 * 1000); // 30+ days from now
+        const endDate = new Date(startDate.getTime() + randomBetween(30, 60) * 24 * 60 * 60 * 1000); // 30-60 days later
+
+        // const startDate = new Date('2025-07-10');
+        // const endDate = new Date('2025-07-14');
+
+        const isActive = endDate > now;
+
+        const raffle = await createRaffle(
+          organizer.id,
+          season2.id,
+          `${organizer.name} - ${faker.commerce.productName()}`,
+          startDate,
+          endDate,
+          !isActive, // completed only if end date passed
+        );
+        season2Raffles.push(raffle);
+
+        // Add participations for active/recent raffles
+        if (startDate < new Date()) {
+          const participantCount = randomBetween(5, 25);
+          const participants = faker.helpers.arrayElements(participantCount);
+
+          for (const user of participants) {
+            if (!user) continue;
+            await createParticipation(user.id, raffle.id, raffle.blockchainId);
+          }
+        }
+      }
+    }
+
+    throw new Error('Stop here');
+
+    // 7. Calculate Season Stats
+    console.log('\n📊 Calculating season statistics...');
+    await calculateSeasonStats(season1.id, organizers, users);
+    await calculateSeasonStats(season2.id, organizers, users);
+
+    // 8. Create Season 1 Rewards (distributed)
+    // console.log('\n🏆 Creating season 1 rewards...');
+    // await createSeasonRewards(season1.id, organizers, users);
+
+    // // 9. Create Notifications
+    // console.log('\n🔔 Creating notifications...');
+    // await createNotifications(users, [...season1Raffles, ...season2Raffles]);
+
+    console.log('\n✅ Seeding completed successfully!');
+  } catch (error) {
+    console.error('❌ Seeding failed:', error);
+    throw error;
+  }
+}
 
 // Utility functions
 function generateWalletAddress(): string {
@@ -94,170 +328,6 @@ function getNotificationMessage(type: string, user: any, raffle: any): string {
       return 'Votre position dans le classement a été mise à jour.';
     default:
       return 'Vous avez une nouvelle notification.';
-  }
-}
-
-// Main seeder function
-async function seedSimulation() {
-  console.log('🌱 Starting Raliz simulation seeder...');
-
-  try {
-    // 1. Create Seasons - Updated to current year
-    console.log('\n📅 Creating seasons...');
-    // const currentYear = new Date().getFullYear();
-    // const now = new Date();
-    // const season1 = await createSeason(
-    //   `Saison Q1 ${currentYear}`,
-    //   new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000), // 90 days ago
-    //   new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
-    //   false,
-    // );
-    // const season2 = await createSeason(
-    //   `Saison Q2 ${currentYear}`,
-    //   new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
-    //   new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000), // 90 days from now
-    //   true,
-    // );
-
-    // if (!season1 || !season2) {
-    //   throw new Error('Failed to create seasons');
-    // }
-
-    const season1 = {
-      id: 'd4d83e59-3229-41ec-a9da-f2f5c9316835',
-    };
-    const season2 = {
-      id: 'cb6b6708-6783-4ec4-a8a9-8022f866227e',
-    };
-
-    // 2. Create Organizers
-    console.log('\n🏢 Creating organizers...');
-
-    const organizers = await db.select().from(organizerTable);
-
-    // 3. Create Users
-    console.log('\n👥 Creating users...');
-    // const users = await createUsers(50);
-
-    // 4. Create Raffles for Season 1 (completed) - Updated dates
-    console.log('\n🎟️ Creating raffles for Season 1...');
-    const season1Raffles = [];
-
-    // for (const organizer of organizers) {
-    //   for (let i = 0; i < 1; i++) {
-    //     // Use future dates for blockchain validation, then mark as completed in DB
-    //     const now = new Date();
-    //     const startDate = new Date(now.getTime() + i * 24 * 60 * 60 * 1000); // i days from now
-    //     const endDate = new Date(startDate.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days later
-
-    //     const raffle = await createRaffle(
-    //       organizer.id,
-    //       season1.id,
-    //       `${organizer.name} - ${faker.commerce.productName()}`,
-    //       startDate,
-    //       endDate,
-    //       true, // completed
-    //     );
-    //     season1Raffles.push(raffle);
-    //   }
-    // }
-
-    // 5. Create participations for Season 1 with winners
-    // console.log('\n🎯 Creating participations and winners for Season 1...');
-    // for (const raffle of season1Raffles) {
-    //   const participantCount = randomBetween(10, 30);
-    //   const participants = faker.helpers.arrayElements(users, participantCount);
-
-    //   const participations = [];
-    //   for (const user of participants) {
-    //     if (!user) continue;
-    //     const participation = await createParticipation(user.id, raffle.id, raffle.blockchainId);
-    //     participations.push({ participation, user });
-    //   }
-
-    //   // Select winners (1-3 based on raffle config)
-    //   const maxWinners = raffle.maxWinners;
-    //   if (!maxWinners) continue;
-
-    //   const winnerCount = Number.parseInt(maxWinners);
-    //   const winners = faker.helpers.arrayElements(participations, Math.min(winnerCount, participations.length));
-
-    //   for (let i = 0; i < winners.length; i++) {
-    //     const winner = winners[i];
-    //     if (!winner) continue;
-
-    //     if (!winner.participation || !winner.user) continue;
-
-    //     await createWinner(
-    //       winner.participation.id,
-    //       raffle.id,
-    //       winner.user.id,
-    //       `${i + 1}`, // rank
-    //     );
-
-    //     // Update participation as winner
-    //     await db
-    //       .update(participationTable)
-    //       .set({ isWinner: true, pointsEarned: 6 }) // 1 base + 5 bonus
-    //       .where(eq(participationTable.id as any, winner.participation.id));
-    //   }
-    // }
-
-    // 6. Create Raffles for Season 2 (ongoing) - Updated dates
-    // console.log('\n🎟️ Creating raffles for Season 2 (ongoing)...');
-    // const season2Raffles = [];
-
-    // for (const organizer of organizers) {
-    //   for (let i = 0; i < randomBetween(1, 3); i++) {
-    //     // Use future dates for blockchain validation
-    //     const now = new Date();
-    //     const startDate = new Date(now.getTime() + (30 + i * 7) * 24 * 60 * 60 * 1000); // 30+ days from now
-    //     const endDate = new Date(startDate.getTime() + randomBetween(30, 60) * 24 * 60 * 60 * 1000); // 30-60 days later
-
-    //     const isActive = endDate > new Date();
-
-    //     const raffle = await createRaffle(
-    //       organizer.id,
-    //       season2.id,
-    //       `${organizer.name} - ${faker.commerce.productName()}`,
-    //       startDate,
-    //       endDate,
-    //       !isActive, // completed only if end date passed
-    //     );
-    //     season2Raffles.push(raffle);
-
-    //     // Add participations for active/recent raffles
-    //     if (startDate < new Date()) {
-    //       const participantCount = randomBetween(5, 25);
-    //       const participants = faker.helpers.arrayElements(users, participantCount);
-
-    //       for (const user of participants) {
-    //         if (!user) continue;
-    //         await createParticipation(user.id, raffle.id, raffle.blockchainId);
-    //       }
-    //     }
-    //   }
-    // }
-
-    const users = await db.select().from(userTable);
-
-    // 7. Calculate Season Stats
-    console.log('\n📊 Calculating season statistics...');
-    await calculateSeasonStats(season1.id, organizers, users);
-    await calculateSeasonStats(season2.id, organizers, users);
-
-    // 8. Create Season 1 Rewards (distributed)
-    // console.log('\n🏆 Creating season 1 rewards...');
-    // await createSeasonRewards(season1.id, organizers, users);
-
-    // // 9. Create Notifications
-    // console.log('\n🔔 Creating notifications...');
-    // await createNotifications(users, [...season1Raffles, ...season2Raffles]);
-
-    console.log('\n✅ Seeding completed successfully!');
-  } catch (error) {
-    console.error('❌ Seeding failed:', error);
-    throw error;
   }
 }
 

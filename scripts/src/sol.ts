@@ -1,0 +1,73 @@
+import { db, eq, organizerTable } from '@repo/db';
+const organizers = [
+  {
+    id: '20a24f44-a7ca-4721-846a-4657065ad39e',
+    name: 'Manchester City',
+    email: 'manchester-city@example.com',
+    password: '$2b$10$142VmFQWry6XfXm.GMDsrOFV8EiaHm39cHNXESwi5V.Ha4oFpzQce',
+    description: 'Manchester City is a football club based in Manchester, England.',
+    logo_url: 'https://fr.mancity.com/dist/images/logos/crest.svg',
+    wallet_address: '0x116F2F9e6fEe5ad8d308a6b0E882E74B9fA6a236',
+    fan_token_address: '0xB33C9B5454EB4377520731CC545fB062B63Afd83',
+    is_verified: true,
+    total_chz_engaged: '0.00000000',
+    total_completed_raffles: 0,
+    leaderboard_rank: null,
+    created_at: '2025-07-12 23:24:50.900978',
+    updated_at: '2025-07-12 23:24:50.900978',
+  },
+  {
+    id: '38894a22-98f1-48b6-8a74-fcb9e03ab2d2',
+    name: 'Paris Saint-Germain',
+    email: 'psg@example.com',
+    password: '$2b$10$8qxAz.FdrSYjuaBsq.6B3uLmaZ3LKxkoADnkiPnB8HAg12UoQ9M3a',
+    description: 'Paris Saint-Germain is a football club based in Paris, France.',
+    logo_url: 'https://www.psg.fr/themes/custom/psg/logo.svg',
+    wallet_address: '0x8342beD0Af2372C9370a56aBB0D1D908B49349a8',
+    fan_token_address: '0x1de38d1def488Dc35d48F62C87647f9864C029f2',
+    is_verified: true,
+    total_chz_engaged: '0.00000000',
+    total_completed_raffles: 0,
+    leaderboard_rank: null,
+    created_at: '2025-07-12 23:24:50.900978',
+    updated_at: '2025-07-12 23:24:50.900978',
+  },
+  {
+    id: '4369a95f-184b-4b46-b13a-1df6913ed1ae',
+    name: 'Galatasaray',
+    email: 'galatasaray@example.com',
+    password: '$2b$10$BgA/wb4IQVQ1Aezi0p6D..OR5r2UBT/4moHfZMBGR1DuRIQUvltja',
+    description: 'Galatasaray is a football club based in Istanbul, Turkey.',
+    logo_url:
+      'https://upload.wikimedia.org/wikipedia/fr/thumb/b/bd/Logo_Galatasaray_SK_2023.svg/1200px-Logo_Galatasaray_SK_2023.svg.png',
+    wallet_address: '0xd92A5E1F95A56D3aDa442D94457f5aCDE4A4D36F',
+    fan_token_address: '0xBc2873F1e3d303D9F23E24CB5c42E84832aeEef6',
+    is_verified: true,
+    total_chz_engaged: '0.00000000',
+    total_completed_raffles: 0,
+    leaderboard_rank: null,
+    created_at: '2025-07-12 23:24:50.900978',
+    updated_at: '2025-07-12 23:24:50.900978',
+  },
+  {
+    id: '5168fd73-f4a1-431c-aab3-2dc905733662',
+    name: 'FC Barcelona',
+    email: 'barcelona@example.com',
+    password: '$2b$10$TPu3farPaiFvxTZ3F4dpMeY6qWZ1rBD56pYM7tYLanUFsghYawVIO',
+    description: 'FC Barcelona is a football club based in Barcelona, Spain.',
+    logo_url:
+      'https://upload.wikimedia.org/wikipedia/fr/thumb/1/1d/Logo_FC_Barcelone.svg/langfr-250px-Logo_FC_Barcelone.svg.png',
+    wallet_address: '0x7913D77c13aB41c63F6031afE1608D24f4f30901',
+    fan_token_address: '0x3877B63d3Db6163b26B34250dD06f88a7a219CA3',
+    is_verified: true,
+    total_chz_engaged: '0.00000000',
+    total_completed_raffles: 0,
+    leaderboard_rank: null,
+    created_at: '2025-07-12 23:24:50.900978',
+    updated_at: '2025-07-12 23:24:50.900978',
+  },
+];
+
+(async () => {
+  await db.insert(organizerTable).values(organizers);
+})();
