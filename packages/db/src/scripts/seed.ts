@@ -35,8 +35,7 @@ async function main() {
       walletAddress: '0x7913D77c13aB41c63F6031afE1608D24f4f30901',
       fanTokenAddress: '0xD20d41726d048a11E46bEbFcBCa9B485D000afC8',
       fanTokenSymbol: 'BAR',
-      logoUrl:
-        'https://upload.wikimedia.org/wikipedia/fr/thumb/1/1d/Logo_FC_Barcelone.svg/langfr-250px-Logo_FC_Barcelone.svg.png',
+      logoUrl: 'https://upload.wikimedia.org/wikipedia/fr/thumb/1/1d/Logo_FC_Barcelone.svg/langfr-250px-Logo_FC_Barcelone.svg.png',
       isVerified: true,
     },
     {
@@ -46,8 +45,8 @@ async function main() {
       password: bcrypt.hashSync('password'),
       walletAddress: '0xd92A5E1F95A56D3aDa442D94457f5aCDE4A4D36F',
       fanTokenAddress: '0x7dd87529f5BEA538c2e686Db86B4878930cced5F8',
-        logoUrl:
-        'https://upload.wikimedia.org/wikipedia/fr/thumb/b/bd/Logo_Galatasaray_SK_2023.svg/1200px-Logo_Galatasaray_SK_2023.svg.png',
+      fanTokenSymbol: 'GAL',
+      logoUrl: 'https://upload.wikimedia.org/wikipedia/fr/thumb/b/bd/Logo_Galatasaray_SK_2023.svg/1200px-Logo_Galatasaray_SK_2023.svg.png',
       isVerified: true,
     },
   ]);
