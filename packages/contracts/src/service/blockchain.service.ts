@@ -1,24 +1,24 @@
 import { ethers } from 'ethers';
 import { CONTRACT_ADDRESSES, RPC_CONFIG } from '../config/web3-config';
-import { createRalizContract, createMockFanTokenContract, type Raliz, type MockFanToken } from '../index';
+import { type MockFanToken, type Raliz, createMockFanTokenContract, createRalizContract } from '../index';
 
 export interface RaffleInfo {
-    title: string;
-    description: string;
-    participationFee: bigint;
-    requiredFanToken: string;
-    minimumFanTokens: bigint;
-    organizer: string;
+  title: string;
+  description: string;
+  participationFee: bigint;
+  requiredFanToken: string;
+  minimumFanTokens: bigint;
+  organizer: string;
 }
 
 export interface RaffleStatus {
-    startDate: bigint;
-    endDate: bigint;
-    maxWinners: bigint;
-    maxParticipants: bigint;
-    participantCount: bigint;
-    isActive: boolean;
-    winnersDrawn: boolean;
+  startDate: bigint;
+  endDate: bigint;
+  maxWinners: bigint;
+  maxParticipants: bigint;
+  participantCount: bigint;
+  isActive: boolean;
+  winnersDrawn: boolean;
 }
 
 export interface CreateRaffleParams {

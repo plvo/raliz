@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+
 // Helper function to parse dates that might be strings or Date objects
 const dateParser = z.union([
     z.string().transform((str) => new Date(str)),
@@ -35,7 +36,7 @@ export const createRaffleSchema = z.object({
 }).refine((data) => data.endDate > data.startDate, {
     message: 'The end date must be after the start date',
     path: ['endDate'],
-});
+  });
 
 export type CreateRaffleInput = z.infer<typeof createRaffleSchema>;
 
