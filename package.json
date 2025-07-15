@@ -7,7 +7,7 @@
   },
   "author": ["https://github.com/plvo", "https://github.com/neysixx"],
   "packageManager": "bun@1.2.18",
-  "workspaces": ["apps/*", "packages/*", "scripts/simulation/*"],
+  "workspaces": ["apps/*", "packages/*", "scripts/*"],
   "engines": {
     "node": ">=22"
   },

@@ -36,6 +36,9 @@ interface EligibilityCheck {
   reason: string;
 }
 
+const contractAddress = process.env.NEXT_PUBLIC_RALIZ_CONTRACT_ADDRESS as string;
+const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL || 'https://spicy-rpc.chiliz.com');
+
 export function ParticipateRaffleDialog({ raffle, open, onOpenChange, onSuccess }: ParticipateRaffleDialogProps) {
   const { user, walletAddress, isConnected } = useUser();
   const { web3Auth } = useWeb3Auth();
@@ -44,12 +47,10 @@ export function ParticipateRaffleDialog({ raffle, open, onOpenChange, onSuccess 
 
   // Créer le service blockchain avec un provider en lecture seule
   const createBlockchainService = useCallback(async () => {
-    const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL || 'https://spicy-rpc.chiliz.com');
-
     // Pour les opérations de lecture, on utilise un wallet factice
     const dummySigner = ethers.Wallet.createRandom().connect(provider);
 
-    return new BlockchainService(provider, dummySigner);
+    return new BlockchainService(provider, dummySigner, contractAddress);
   }, []);
 
   const contractRaffleId = raffle.contractRaffleId;
@@ -62,13 +63,18 @@ export function ParticipateRaffleDialog({ raffle, open, onOpenChange, onSuccess 
     try {
       const blockchainService = await createBlockchainService();
 
+      console.log({ contractRaffleId, walletAddress });
+
       const result = await blockchainService.isEligibleToParticipate(contractRaffleId, walletAddress);
 
+      console.log({ result });
+
       setEligibility({
-        eligible: result,
-        userBalance: 0n, // TODO: Récupérer la vraie balance
-        required: BigInt(raffle.minimumFanTokens || 0),
-        reason: result ? 'Eligible' : 'Not eligible to participate',
+        // eligible: true,
+        eligible: result[0],
+        userBalance: result[1],
+        required: result[2],
+        reason: result[3],
       });
     } catch (error) {
       console.error('Error checking eligibility:', error);
@@ -110,10 +116,7 @@ export function ParticipateRaffleDialog({ raffle, open, onOpenChange, onSuccess 
       const ethersProvider = new ethers.BrowserProvider(web3Auth.provider);
       const signer = await ethersProvider.getSigner();
 
-      const blockchainService = new BlockchainService(
-        new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL || 'https://spicy-rpc.chiliz.com'),
-        signer,
-      );
+      const blockchainService = new BlockchainService(provider, signer, contractAddress);
 
       // Participer via le service blockchain
       const tx = await blockchainService.participateInRaffle(contractRaffleId, raffle.participationPrice, signer);
@@ -161,6 +164,9 @@ export function ParticipateRaffleDialog({ raffle, open, onOpenChange, onSuccess 
       toast: {
         title: 'Participation failed',
         description: 'Failed to join the raffle. Please try again.',
+      },
+      fn: (error) => {
+        console.error('Participation failed:', error);
       },
     },
     invalidateQueries: [['raffles'], ['user-participations', user?.id || ''], ['user', walletAddress || '']],
@@ -227,8 +233,6 @@ export function ParticipateRaffleDialog({ raffle, open, onOpenChange, onSuccess 
         <div className='space-y-4'>
           <Card>
             <CardContent className='p-4'>
-              <pre>{JSON.stringify({ eligibility: eligibility?.eligible, contractRaffleId }, null, 2)}</pre>
-
               <h3 className='font-semibold text-sm mb-2'>{raffle.title}</h3>
               <p className='text-sm text-muted-foreground mb-3 line-clamp-2'>{raffle.description}</p>
 

@@ -15,29 +15,7 @@ export interface FanTokenBalance {
   minimumRequired: string;
 }
 
-const FAN_TOKENS = [
-  {
-    symbol: 'PSG',
-    name: 'Paris Saint-Germain Fan Token',
-    address: CONTRACT_ADDRESSES.PSG_TOKEN,
-    organizerName: 'Paris Saint-Germain',
-  },
-  {
-    symbol: 'BAR',
-    name: 'FC Barcelona Fan Token',
-    address: CONTRACT_ADDRESSES.BAR_TOKEN,
-    organizerName: 'FC Barcelona',
-  },
-  {
-    symbol: 'CITY',
-    name: 'Manchester City Fan Token',
-    address: CONTRACT_ADDRESSES.CITY_TOKEN,
-    organizerName: 'Manchester City',
-  },
-] as const;
-
 export function useFanTokenBalances(walletAddress: string | undefined) {
-  // Récupérer les balances pour chaque token
   const psgBalance = useReadContract({
     address: CONTRACT_ADDRESSES.PSG_TOKEN as `0x${string}`,
     abi: MockFanTokenABI,
@@ -68,7 +46,18 @@ export function useFanTokenBalances(walletAddress: string | undefined) {
     },
   });
 
-  // Récupérer les decimals pour chaque token
+  const galBalance = useReadContract({
+    address: process.env.NEXT_PUBLIC_GALA_TOKEN_ADDRESS as `0x${string}`,
+    abi: MockFanTokenABI,
+    functionName: 'balanceOf',
+    args: [walletAddress as `0x${string}`],
+    query: {
+      enabled: !!walletAddress && !!process.env.NEXT_PUBLIC_GALA_TOKEN_ADDRESS,
+    },
+  });
+
+  console.log({ galBalance, cityBalance });
+
   const psgDecimals = useReadContract({
     address: CONTRACT_ADDRESSES.PSG_TOKEN as `0x${string}`,
     abi: MockFanTokenABI,
@@ -96,11 +85,18 @@ export function useFanTokenBalances(walletAddress: string | undefined) {
     },
   });
 
-  // Combiner les résultats
-  const balances: FanTokenBalance[] = [];
-  const minimumRequired = 50; // Standard minimum
+  const galDecimals = useReadContract({
+    address: process.env.NEXT_PUBLIC_GALA_TOKEN_ADDRESS as `0x${string}`,
+    abi: MockFanTokenABI,
+    functionName: 'decimals',
+    query: {
+      enabled: !!process.env.NEXT_PUBLIC_GALA_TOKEN_ADDRESS,
+    },
+  });
 
-  // PSG Token
+  const balances: FanTokenBalance[] = [];
+  const minimumRequired = 50;
+
   if (psgBalance.data !== undefined && psgDecimals.data !== undefined) {
     const balance = Number(psgBalance.data) / 10 ** Number(psgDecimals.data);
     balances.push({
@@ -108,14 +104,13 @@ export function useFanTokenBalances(walletAddress: string | undefined) {
       name: 'Paris Saint-Germain Fan Token',
       balance: balance.toString(),
       decimals: Number(psgDecimals.data),
-      tokenAddress: CONTRACT_ADDRESSES.PSG_TOKEN,
+      tokenAddress: CONTRACT_ADDRESSES.PSG_TOKEN as `0x${string}`,
       organizerName: 'Paris Saint-Germain',
       isEligible: balance >= minimumRequired,
       minimumRequired: minimumRequired.toString(),
     });
   }
 
-  // BAR Token
   if (barBalance.data !== undefined && barDecimals.data !== undefined) {
     const balance = Number(barBalance.data) / 10 ** Number(barDecimals.data);
     balances.push({
@@ -123,14 +118,13 @@ export function useFanTokenBalances(walletAddress: string | undefined) {
       name: 'FC Barcelona Fan Token',
       balance: balance.toString(),
       decimals: Number(barDecimals.data),
-      tokenAddress: CONTRACT_ADDRESSES.BAR_TOKEN,
+      tokenAddress: CONTRACT_ADDRESSES.BAR_TOKEN as `0x${string}`,
       organizerName: 'FC Barcelona',
       isEligible: balance >= minimumRequired,
       minimumRequired: minimumRequired.toString(),
     });
   }
 
-  // CITY Token
   if (cityBalance.data !== undefined && cityDecimals.data !== undefined) {
     const balance = Number(cityBalance.data) / 10 ** Number(cityDecimals.data);
     balances.push({
@@ -138,29 +132,46 @@ export function useFanTokenBalances(walletAddress: string | undefined) {
       name: 'Manchester City Fan Token',
       balance: balance.toString(),
       decimals: Number(cityDecimals.data),
-      tokenAddress: CONTRACT_ADDRESSES.CITY_TOKEN,
+      tokenAddress: CONTRACT_ADDRESSES.CITY_TOKEN as `0x${string}`,
       organizerName: 'Manchester City',
       isEligible: balance >= minimumRequired,
       minimumRequired: minimumRequired.toString(),
     });
   }
 
-  // Déterminer l'état de loading et d'erreur
+  if (galBalance.data !== undefined && galDecimals.data !== undefined) {
+    const balance = Number(galBalance.data) / 10 ** Number(galDecimals.data);
+    balances.push({
+      symbol: 'GAL',
+      name: 'Galatasaray Fan Token',
+      balance: balance.toString(),
+      decimals: Number(galDecimals.data),
+      tokenAddress: process.env.NEXT_PUBLIC_GALA_TOKEN_ADDRESS as `0x${string}`,
+      organizerName: 'Galatasaray',
+      isEligible: balance >= minimumRequired,
+      minimumRequired: minimumRequired.toString(),
+    });
+  }
+
   const isLoading =
     psgBalance.isLoading ||
     barBalance.isLoading ||
     cityBalance.isLoading ||
+    galBalance.isLoading ||
     psgDecimals.isLoading ||
     barDecimals.isLoading ||
-    cityDecimals.isLoading;
+    cityDecimals.isLoading ||
+    galDecimals.isLoading;
 
   const error =
     psgBalance.error ||
     barBalance.error ||
     cityBalance.error ||
+    galBalance.error ||
     psgDecimals.error ||
     barDecimals.error ||
-    cityDecimals.error;
+    cityDecimals.error ||
+    galDecimals.error;
 
   return {
     data: balances,
@@ -170,9 +181,11 @@ export function useFanTokenBalances(walletAddress: string | undefined) {
       psgBalance.refetch();
       barBalance.refetch();
       cityBalance.refetch();
+      galBalance.refetch();
       psgDecimals.refetch();
       barDecimals.refetch();
       cityDecimals.refetch();
+      galDecimals.refetch();
     },
   };
 }

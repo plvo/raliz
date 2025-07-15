@@ -16,7 +16,7 @@ interface RankingPageClientProps {
 }
 
 export function RankingPageClient({ initialOverallRanking, seasons }: RankingPageClientProps) {
-  const [selectedSeasonId, setSelectedSeasonId] = useState<string | null>(null);
+  const [selectedSeasonId, setSelectedSeasonId] = useState<string>(seasons[0].id);
 
   const {
     data: seasonData,
@@ -31,7 +31,7 @@ export function RankingPageClient({ initialOverallRanking, seasons }: RankingPag
     },
   });
 
-  const handleSeasonChange = (seasonId: string | null) => {
+  const handleSeasonChange = (seasonId: string) => {
     setSelectedSeasonId(seasonId);
   };
 

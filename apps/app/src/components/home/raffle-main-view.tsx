@@ -26,6 +26,7 @@ interface RaffleDisplayProps {
   raffles: Raffle[];
   viewMode: 'grid' | 'list';
   userParticipations?: Record<string, boolean>;
+  selectedOrganizer: OrgWithoutWallet | null;
 }
 
 interface RaffleItemProps {
@@ -99,14 +100,19 @@ export function RaffleMainView({ raffles, selectedOrganizer, className }: Raffle
           </div>
         </CardHeader>
         <CardContent>
-          <RaffleDisplay raffles={raffles} viewMode={viewMode} userParticipations={userParticipations || {}} />
+          <RaffleDisplay
+            raffles={raffles}
+            viewMode={viewMode}
+            userParticipations={userParticipations || {}}
+            selectedOrganizer={selectedOrganizer}
+          />
         </CardContent>
       </Card>
     </div>
   );
 }
 
-function RaffleDisplay({ raffles, viewMode, userParticipations }: RaffleDisplayProps) {
+function RaffleDisplay({ raffles, viewMode, userParticipations, selectedOrganizer }: RaffleDisplayProps) {
   if (raffles.length === 0) {
     return (
       <div className='flex flex-col items-center justify-center py-16 text-center'>
@@ -125,7 +131,13 @@ function RaffleDisplay({ raffles, viewMode, userParticipations }: RaffleDisplayP
     return (
       <div className='space-y-4'>
         {raffles
-          .sort((a, b) => new Date(b.endDate).getTime() - new Date(a.endDate).getTime())
+          .filter((raffle) => (selectedOrganizer ? raffle.organizerId === selectedOrganizer.id : true))
+          .sort((a, b) => {
+            const statusOrder = { ACTIVE: 0, DRAFT: 1, ENDED: 2 };
+            const aOrder = statusOrder[a.status as keyof typeof statusOrder] ?? 3;
+            const bOrder = statusOrder[b.status as keyof typeof statusOrder] ?? 3;
+            return aOrder - bOrder;
+          })
           .map((raffle) => (
             <RaffleListItem
               key={raffle.id}
@@ -140,7 +152,13 @@ function RaffleDisplay({ raffles, viewMode, userParticipations }: RaffleDisplayP
   return (
     <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
       {raffles
-        .sort((a, b) => new Date(b.endDate).getTime() - new Date(a.endDate).getTime())
+        .slice()
+        .sort((a, b) => {
+          const statusOrder = { ACTIVE: 0, DRAFT: 1, ENDED: 2 };
+          const aOrder = statusOrder[a.status as keyof typeof statusOrder] ?? 3;
+          const bOrder = statusOrder[b.status as keyof typeof statusOrder] ?? 3;
+          return aOrder - bOrder;
+        })
         .map((raffle) => (
           <RaffleCard key={raffle.id} raffle={raffle} hasParticipated={userParticipations?.[raffle.id] || false} />
         ))}

@@ -16,34 +16,6 @@ export function RankingList({ data, seasonData, isSeasonView = false }: RankingL
   if (isSeasonView && seasonData) {
     return (
       <div className='space-y-6'>
-        <Card>
-          <CardHeader>
-            <CardTitle className='flex items-center gap-2'>
-              <CalendarDays className='h-5 w-5' />
-              {seasonData.season.name}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-              <div className='flex items-center gap-2'>
-                <Badge variant='outline'>{seasonData.season.isActive ? 'Active' : 'Ended'}</Badge>
-              </div>
-              <div className='flex items-center gap-2 text-sm text-muted-foreground'>
-                <CalendarDays className='h-4 w-4' />
-                {new Date(seasonData.season.startDate).toLocaleDateString()} -{' '}
-                {new Date(seasonData.season.endDate).toLocaleDateString()}
-              </div>
-              <div className='flex items-center gap-2 text-sm text-muted-foreground'>
-                <Users className='h-4 w-4' />
-                {seasonData.organizerStats.length} Organizations
-              </div>
-            </div>
-            {seasonData.season.description && (
-              <p className='mt-4 text-sm text-muted-foreground'>{seasonData.season.description}</p>
-            )}
-          </CardContent>
-        </Card>
-
         <div className='space-y-4'>
           <div className='flex items-center gap-2'>
             <TrendingUp className='h-5 w-5' />
