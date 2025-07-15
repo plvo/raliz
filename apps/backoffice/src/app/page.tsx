@@ -17,29 +17,16 @@ import {
 import Link from 'next/link';
 import { useUser } from '@/lib/providers/user-provider';
 import { useActionQuery } from '@/hooks/use-action';
-import { getRaffleStats, getOrganizerRaffles } from '@/actions/raffle/get';
+import { getOrganizerRaffles } from '@/actions/raffle/get';
 import { Badge } from '@repo/ui/components/badge';
 import { toast } from 'sonner';
+import CreateRaffleModal from '@/components/raffles/create-raffle-modal';
 
 export default function DashboardPage() {
   const { user } = useUser();
   const iframeUrl = `https://raliz.xyz/raffles/${user?.walletAddress}`;
 
-  // Get statistics
-  const { data: stats } = useActionQuery({
-    actionFn: () => user ? getRaffleStats(user) : Promise.resolve({ ok: false, message: 'No user' }),
-    queryKey: user ? ['raffle-stats', user.id] : [''],
-    initialData: {
-      totalRaffles: 0,
-      activeRaffles: 0,
-      endedRaffles: 0,
-      draftRaffles: 0,
-      totalParticipations: 0,
-      totalWinners: 0,
-    },
-  });
-
-  // Get recent raffles
+  // Get raffles
   const { data: recentRaffles = [] } = useActionQuery({
     actionFn: () => user ? getOrganizerRaffles(user) : Promise.resolve({ ok: false, message: 'No user' }),
     queryKey: user ? ['organizer-raffles', user.id] : [''],
@@ -70,27 +57,15 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatsCard
           title="Total Raffles"
-          value={stats?.totalRaffles || 0}
+          value={recentRaffles.length || 0}
           description="All time raffles created"
           icon={Ticket}
         />
         <StatsCard
           title="Active Raffles"
-          value={stats?.activeRaffles || 0}
+          value={recentRaffles.filter((raffle) => raffle.status === 'ACTIVE').length || 0}
           description="Currently running"
           icon={Activity}
-        />
-        <StatsCard
-          title="Total Participants"
-          value={stats?.totalParticipations || 0}
-          description="Across all raffles"
-          icon={Users}
-        />
-        <StatsCard
-          title="Winners Selected"
-          value={stats?.totalWinners || 0}
-          description="Lucky winners so far"
-          icon={Trophy}
         />
       </div>
 
@@ -105,19 +80,19 @@ export default function DashboardPage() {
             <div className="grid gap-4 md:grid-cols-3">
               <div className="flex flex-col items-center text-center space-y-2">
                 <div className="text-2xl font-bold text-green-600">
-                  {stats?.activeRaffles || 0}
+                  {recentRaffles.filter((raffle) => raffle.status === 'ACTIVE').length || 0}
                 </div>
                 <div className="text-sm text-muted-foreground">Active</div>
               </div>
               <div className="flex flex-col items-center text-center space-y-2">
                 <div className="text-2xl font-bold text-yellow-600">
-                  {stats?.draftRaffles || 0}
+                  {recentRaffles.filter((raffle) => raffle.status === 'DRAFT').length || 0}
                 </div>
                 <div className="text-sm text-muted-foreground">Draft</div>
               </div>
               <div className="flex flex-col items-center text-center space-y-2">
                 <div className="text-2xl font-bold text-gray-600">
-                  {stats?.endedRaffles || 0}
+                  {recentRaffles.filter((raffle) => raffle.status === 'ENDED').length || 0}
                 </div>
                 <div className="text-sm text-muted-foreground">Ended</div>
               </div>
@@ -132,10 +107,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             <Button asChild variant="outline" className="w-full justify-start">
-              <Link href="/raffles/create">
-                <Plus className="w-4 h-4 mr-2" />
-                Create New Raffle
-              </Link>
+              <CreateRaffleModal />
             </Button>
             <Button asChild variant="outline" className="w-full justify-start">
               <Link href="/raffles">
